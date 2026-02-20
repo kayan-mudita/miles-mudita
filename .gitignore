@@ -15,3 +15,7 @@ tsconfig.tsbuildinfo
 .mcp.json
 .agents/
 .cursor/
+
+# Local Netlify folder
+.netlify
+deno.lock
