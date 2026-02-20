@@ -1,0 +1,28 @@
+[build]
+  command = "npx prisma generate && npm run build"
+  publish = ".next"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# /studios → serves the Mudita Studios static page (in public/studios/)
+[[redirects]]
+  from   = "/studios"
+  to     = "/studios/index.html"
+  status = 200
+
+# Environment variable notes for Netlify dashboard:
+# DATABASE_URL        — Supabase pooler URL (port 6543, ?pgbouncer=true)
+# ANTHROPIC_API_KEY   — Claude API key
+# MILES_ANTHROPIC_API_KEY — Same key (used by pipeline agents)
+# AUTH_SECRET         — NextAuth secret
+# NEXTAUTH_SECRET     — Same as AUTH_SECRET
+# NEXTAUTH_URL        — Your Netlify URL (e.g. https://miles.netlify.app)
+# NEXT_PUBLIC_APP_URL — Same as NEXTAUTH_URL
+# PIPELINE_SECRET     — Same as AUTH_SECRET (or a separate secret for internal auth)
+# RESEND_API_KEY      — Optional, for email notifications
+# EMAIL_FROM          — e.g. Miles <reports@mudita.com>

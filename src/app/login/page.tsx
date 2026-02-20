@@ -1,0 +1,121 @@
+"use client";
+
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Button from "@/components/ui/Button";
+import GoldGlow from "@/components/ui/GoldGlow";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setError("Invalid email or password");
+    } else {
+      router.push("/dashboard");
+    }
+    setLoading(false);
+  }
+
+  const inputClass =
+    "w-full bg-navy-800 border border-gold-500/15 rounded-sm px-4 py-3 text-cream-100 font-body placeholder:text-cream-300/30 focus:outline-none focus:border-gold-500/50 focus:shadow-[0_0_15px_rgba(201,168,76,0.1)] transition-all";
+
+  return (
+    <section className="relative min-h-screen flex items-center justify-center py-16 overflow-hidden">
+      <GoldGlow className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" size="lg" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative z-10 w-full max-w-md px-6"
+      >
+        <div className="text-center mb-8">
+          <h1 className="font-display text-4xl text-cream-100 mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-cream-300 text-sm font-body">
+            Sign in to continue researching
+          </p>
+        </div>
+
+        <div className="bg-navy-800 border border-gold-500/15 rounded-lg p-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-cream-200 text-sm font-body mb-1.5"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="jane@example.com"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-cream-200 text-sm font-body mb-1.5"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min 8 characters"
+                className={inputClass}
+              />
+            </div>
+
+            {error && (
+              <p className="text-red-400 text-sm font-body">{error}</p>
+            )}
+
+            <Button
+              type="submit"
+              variant="filled"
+              size="lg"
+              loading={loading}
+              className="w-full"
+            >
+              Sign In
+            </Button>
+          </form>
+        </div>
+
+        <p className="text-center text-cream-300/50 text-sm font-body mt-6">
+          Don&apos;t have an account?{" "}
+          <a href="/signup" className="text-gold-500 hover:underline">
+            Sign up
+          </a>
+        </p>
+      </motion.div>
+    </section>
+  );
+}
