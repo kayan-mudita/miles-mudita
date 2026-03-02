@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Check JWT token (works in Edge Runtime, no Prisma needed)
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
-  const isLoggedIn = !!token;
+  // Check for session cookie existence (lightweight Edge-compatible check).
+  // Actual auth verification happens in API routes via auth().
+  const hasSession =
+    req.cookies.has("__Secure-authjs.session-token") ||
+    req.cookies.has("authjs.session-token");
+  const isLoggedIn = hasSession;
 
   // Protected routes
   const protectedRoutes = ["/dashboard", "/report", "/submit", "/tracking", "/team", "/compare"];

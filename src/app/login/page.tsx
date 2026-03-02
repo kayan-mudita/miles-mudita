@@ -28,7 +28,8 @@ export default function LoginPage() {
     if (result?.error) {
       setError("Invalid email or password");
     } else {
-      router.push("/dashboard");
+      const params = new URLSearchParams(window.location.search);
+      router.push(params.get("callbackUrl") || "/dashboard");
     }
     setLoading(false);
   }
