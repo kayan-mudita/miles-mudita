@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import ProgressTracker from "@/components/tracking/ProgressTracker";
 import GoldGlow from "@/components/ui/GoldGlow";
@@ -9,7 +10,8 @@ import Button from "@/components/ui/Button";
 
 function TrackingContent() {
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "your email";
+  const { data: session } = useSession();
+  const email = session?.user?.email || searchParams.get("email") || "your email";
   const reportName = searchParams.get("name") || "your idea";
   const jobId = searchParams.get("jobId") || "";
 
