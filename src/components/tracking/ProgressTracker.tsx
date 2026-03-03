@@ -62,6 +62,10 @@ export default function ProgressTracker({ jobId }: ProgressTrackerProps) {
   useEffect(() => {
     if (!jobId) return;
 
+    let lastProgress = -1;
+    let lastProgressChangeAt = Date.now();
+    const STALE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes with no progress change
+
     // Poll the status endpoint every 3 seconds
     const poll = async () => {
       try {
@@ -72,6 +76,23 @@ export default function ProgressTracker({ jobId }: ProgressTrackerProps) {
         setProgress(data.progress);
         if (data.estimatedMinutes) {
           setEstimatedMinutes(data.estimatedMinutes);
+        }
+
+        // Track progress changes to detect stuck jobs client-side
+        if (data.progress !== lastProgress) {
+          lastProgress = data.progress;
+          lastProgressChangeAt = Date.now();
+        } else if (
+          data.status === "running" &&
+          Date.now() - lastProgressChangeAt > STALE_TIMEOUT_MS
+        ) {
+          setIsFailed(true);
+          setDetail("Pipeline appears to have stopped. Please retry your report.");
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+          return;
         }
 
         const stageIndex = TRACKING_STAGES.findIndex(

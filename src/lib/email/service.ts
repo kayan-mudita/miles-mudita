@@ -1,5 +1,5 @@
 import { getResend, EMAIL_FROM, APP_URL } from "./config";
-import { prisma } from "@/lib/db";
+import { prisma } from "../db";
 
 export async function sendReportReadyEmail(reportId: string): Promise<void> {
   const report = await prisma.report.findUnique({

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { prisma } from "../db";
 import { pipelineLog } from "./logger";
 
 export async function createJob(

@@ -1,7 +1,8 @@
 import type { Handler, HandlerEvent } from "@netlify/functions";
+import { runPipeline } from "../../src/lib/pipeline/orchestrator";
 
 /**
- * Netlify Background Function — triggers the pipeline via the Next.js API.
+ * Netlify Background Function — runs the pipeline directly.
  *
  * The `-background` suffix tells Netlify to:
  * - Return 202 Accepted immediately to the caller
@@ -9,8 +10,8 @@ import type { Handler, HandlerEvent } from "@netlify/functions";
  *
  * Flow:
  * 1. /api/submit creates the job, then calls this background function
- * 2. This function calls /api/pipeline/run (a Next.js API route) which
- *    executes the actual pipeline with full access to Prisma, agents, etc.
+ * 2. This function runs the pipeline directly (no HTTP hop to API route),
+ *    giving it the full 15-minute background function timeout.
  */
 const handler: Handler = async (event: HandlerEvent) => {
   if (event.httpMethod !== "POST") {
@@ -34,22 +35,10 @@ const handler: Handler = async (event: HandlerEvent) => {
       return { statusCode: 401, body: "Unauthorized" };
     }
 
-    // Call the internal Next.js API route that runs the pipeline
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.URL || "";
-    const res = await fetch(`${appUrl}/api/pipeline/run`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-pipeline-secret": authHeader,
-      },
-      body: JSON.stringify({ jobId, searchTopic, reportName, maxRounds }),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Pipeline API returned error:", res.status, text);
-      return { statusCode: res.status, body: text };
-    }
+    // Run the pipeline directly — this has the full 15-minute timeout
+    console.log(`[background] Starting pipeline for job ${jobId} (maxRounds=${maxRounds})`);
+    await runPipeline(jobId, searchTopic, reportName, maxRounds);
+    console.log(`[background] Pipeline completed for job ${jobId}`);
 
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   } catch (err) {

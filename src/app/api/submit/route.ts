@@ -94,11 +94,18 @@ export async function POST(req: NextRequest) {
     // Falls back to direct execution in development
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const pipelineSecret =
-      process.env.PIPELINE_SECRET || process.env.AUTH_SECRET || "";
+      process.env.PIPELINE_SECRET || process.env.AUTH_SECRET;
+    if (!pipelineSecret) {
+      return NextResponse.json({ error: "Pipeline authentication not configured" }, { status: 500 });
+    }
 
-    const isNetlify = !!process.env.NETLIFY;
+    // Use NEXT_PUBLIC_APP_URL as production indicator (NETLIFY env var isn't always set at runtime)
+    const isNetlify = !!process.env.NEXT_PUBLIC_APP_URL && process.env.NODE_ENV === "production";
 
     if (isNetlify) {
+      if (!process.env.NEXT_PUBLIC_APP_URL) {
+        return NextResponse.json({ error: "App URL not configured" }, { status: 500 });
+      }
       // In production on Netlify: call the background function
       const bgUrl = `${appUrl}/.netlify/functions/run-pipeline-background`;
       pipelineLog.info("Triggering Netlify background function", {
@@ -117,7 +124,7 @@ export async function POST(req: NextRequest) {
           reportName,
           maxRounds,
         }),
-      }).catch((err) => {
+      }).catch(async (err) => {
         pipelineLog.error(
           `Failed to trigger background function for job ${report.id}`,
           {
@@ -125,6 +132,10 @@ export async function POST(req: NextRequest) {
             data: { jobId: report.id },
           }
         );
+        await prisma.report.update({
+          where: { id: report.id },
+          data: { status: "FAILED", error: "Failed to start report pipeline. Please retry." },
+        }).catch(() => {});
       });
     } else {
       // In local development: fire-and-forget in the same process
@@ -143,7 +154,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, jobId: report.id });
-  } catch {
+  } catch (err) {
+    console.error("Submit error:", err);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

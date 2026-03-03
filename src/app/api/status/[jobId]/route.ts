@@ -30,13 +30,36 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Detect stale RUNNING jobs — if no DB update for 5 minutes, mark as failed.
+  // This recovers from server crashes that kill the pipeline mid-run.
+  const STALE_THRESHOLD_MS = 5 * 60 * 1000;
+  let status = job.status;
+  let error = job.error;
+  let detail = job.detail;
+  let stage = job.stage;
+
+  if (
+    job.status === "RUNNING" &&
+    Date.now() - new Date(job.updatedAt).getTime() > STALE_THRESHOLD_MS
+  ) {
+    const failMsg = "Pipeline stopped unexpectedly. Please retry your report.";
+    await prisma.report.update({
+      where: { id: job.id },
+      data: { status: "FAILED", stage: "failed", error: failMsg, detail: failMsg },
+    });
+    status = "FAILED";
+    error = failMsg;
+    detail = failMsg;
+    stage = "failed";
+  }
+
   return NextResponse.json({
     id: job.id,
-    status: job.status.toLowerCase(),
-    stage: job.stage,
+    status: status.toLowerCase(),
+    stage,
     progress: job.progress,
-    detail: job.detail,
-    error: job.error,
+    detail,
+    error,
     hasReport: !!job.reportHtml,
     estimatedMinutes: job.estimatedMinutes,
     depth: job.depth,

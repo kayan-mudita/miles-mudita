@@ -44,6 +44,12 @@ export async function runPipeline(
     log.stageStart("planning", "Generating research dimensions...");
     const planTimer = startTimer();
     await updateJob(jobId, { stage: "planning", progress: 5, detail: "Generating research dimensions..." });
+
+    // Debug: verify API key availability
+    const { getApiKey } = await import("./runAgent");
+    const keyPreview = getApiKey();
+    log.info(`API key check: exists=${!!keyPreview}, length=${keyPreview.length}, prefix=${keyPreview.slice(0, 12)}...`);
+
     await planTopicsAgent(ctx);
     log.stageEnd("planning", planTimer(), `Topics: ${Object.values(ctx.dimensions).map(d => d.topic?.slice(0, 40)).join(" | ")}`);
     await updateJob(jobId, { progress: 8, detail: "Research dimensions planned" });
@@ -193,7 +199,7 @@ export async function runPipeline(
 
     // Fire-and-forget email notification
     try {
-      const { sendReportReadyEmail } = await import("@/lib/email/service");
+      const { sendReportReadyEmail } = await import("../email/service");
       sendReportReadyEmail(jobId).catch((emailErr: unknown) => {
         log.warn("Email notification failed", { error: String(emailErr) });
       });
@@ -202,11 +208,12 @@ export async function runPipeline(
     }
   } catch (err) {
     log.pipelineFail(err, pipelineTimer());
+    const errMsg = err instanceof Error ? err.message : "Pipeline failed";
     await updateJob(jobId, {
       stage: "failed",
       status: "FAILED",
-      error: err instanceof Error ? err.message : "Pipeline failed",
-      detail: "An error occurred during report generation",
+      error: errMsg,
+      detail: `Pipeline error: ${errMsg.slice(0, 200)}`,
     });
   }
 }

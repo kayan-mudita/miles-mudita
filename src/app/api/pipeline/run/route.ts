@@ -3,6 +3,7 @@ import { runPipeline } from "@/lib/pipeline/orchestrator";
 import { pipelineLog } from "@/lib/pipeline/logger";
 
 export const runtime = "nodejs";
+export const maxDuration = 900; // 15 minutes — pipeline needs extended execution
 
 /**
  * Internal API route that executes the research pipeline.

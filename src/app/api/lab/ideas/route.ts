@@ -24,7 +24,12 @@ async function ensureSeeded() {
 }
 
 export async function GET() {
-  await ensureSeeded();
-  const ideas = await prisma.labIdea.findMany({ orderBy: { votes: "desc" } });
-  return NextResponse.json(ideas);
+  try {
+    await ensureSeeded();
+    const ideas = await prisma.labIdea.findMany({ orderBy: { votes: "desc" } });
+    return NextResponse.json(ideas);
+  } catch (err) {
+    console.error("Ideas GET error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

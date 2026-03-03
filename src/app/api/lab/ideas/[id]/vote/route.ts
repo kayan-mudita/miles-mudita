@@ -4,17 +4,29 @@ import { prisma } from "@/lib/db";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const ideaId = parseInt(id);
-  const { direction } = await req.json();
+  try {
+    const { id } = await params;
+    const ideaId = parseInt(id);
+    if (isNaN(ideaId)) {
+      return NextResponse.json({ error: "Invalid idea ID" }, { status: 400 });
+    }
 
-  const idea = await prisma.labIdea.findUnique({ where: { id: ideaId } });
-  if (!idea) return NextResponse.json({ message: "Not found" }, { status: 404 });
+    const { direction } = await req.json();
+    if (direction !== "up" && direction !== "down") {
+      return NextResponse.json({ error: "Direction must be 'up' or 'down'" }, { status: 400 });
+    }
 
-  const updated = await prisma.labIdea.update({
-    where: { id: ideaId },
-    data: { votes: { increment: direction === "up" ? 1 : -1 } },
-  });
+    const idea = await prisma.labIdea.findUnique({ where: { id: ideaId } });
+    if (!idea) return NextResponse.json({ message: "Not found" }, { status: 404 });
 
-  return NextResponse.json(updated);
+    const updated = await prisma.labIdea.update({
+      where: { id: ideaId },
+      data: { votes: { increment: direction === "up" ? 1 : -1 } },
+    });
+
+    return NextResponse.json(updated);
+  } catch (err) {
+    console.error("Vote POST error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

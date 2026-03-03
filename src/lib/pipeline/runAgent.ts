@@ -1,4 +1,4 @@
-import { query } from "@anthropic-ai/claude-agent-sdk";
+import Anthropic from "@anthropic-ai/sdk";
 import { CLAUDE_MODEL } from "./types";
 import { pipelineLog, startTimer } from "./logger";
 
@@ -43,6 +43,11 @@ function extractJSON(text: string): string {
   return text.trim();
 }
 
+/**
+ * Run an agent using the Anthropic Messages API directly.
+ * This replaces the previous claude-agent-sdk implementation that spawned
+ * a Claude Code subprocess (which doesn't work on serverless platforms).
+ */
 export async function runAgent<T>(options: RunAgentOptions): Promise<T> {
   const { systemPrompt, userPrompt, tools = [], maxTurns = 1, outputSchema, agentName } = options;
   const label = agentName || "unknown";
@@ -71,76 +76,66 @@ export async function runAgent<T>(options: RunAgentOptions): Promise<T> {
     finalSystemPrompt += `\n\nIMPORTANT: After completing your work, you MUST output your final answer as ONLY a valid JSON object matching this exact schema. No prose, no explanation, no markdown fences — just the raw JSON object.\n\nRequired output schema:\n${schemaStr}`;
   }
 
-  const queryOptions: Record<string, unknown> = {
-    model: CLAUDE_MODEL,
-    permissionMode: "bypassPermissions",
-    allowDangerouslySkipPermissions: true,
-    systemPrompt: finalSystemPrompt,
-    maxTurns,
-    env: {
-      ANTHROPIC_API_KEY: apiKey,
-      NODE_ENV: process.env.NODE_ENV || "development",
-      // System paths needed for spawning node subprocess
-      PATH: process.env.PATH || "",
-      HOME: process.env.HOME || "",
-    },
-  };
+  // Build API tools — map internal tool names to Anthropic API tool types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const apiTools: any[] = [];
+  if (tools.includes("WebSearch")) {
+    apiTools.push({ type: "web_search_20250305", name: "web_search", max_uses: 10 });
+  }
 
-  // Always pass tools — empty array disables all built-in Claude Code tools
-  queryOptions.tools = tools;
+  // Explicitly set baseURL to bypass Netlify's AI proxy (which sets ANTHROPIC_BASE_URL)
+  const client = new Anthropic({ apiKey, baseURL: "https://api.anthropic.com" });
 
-  // Add timeout via AbortController to prevent hanging agent calls
+  // Add timeout via AbortController
   const abortController = new AbortController();
   const timeout = setTimeout(() => {
     abortController.abort();
   }, AGENT_TIMEOUT_MS);
 
-  queryOptions.abortSignal = abortController.signal;
-
-  const result = query({
-    prompt: userPrompt,
-    options: queryOptions as Parameters<typeof query>[0]["options"],
-  });
-
-  // Collect ALL text from assistant messages
   const allTextBlocks: string[] = [];
-  let messageCount = 0;
   let toolUseCount = 0;
 
   try {
-    for await (const message of result) {
-      if (message.type === "assistant") {
-        messageCount++;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const betaMessage = (message as any).message;
-        const content = betaMessage?.content;
-        if (Array.isArray(content)) {
-          for (const block of content) {
-            if (block?.type === "text" && typeof block.text === "string" && block.text.trim()) {
-              allTextBlocks.push(block.text);
-            }
-            if (block?.type === "tool_use") {
-              toolUseCount++;
-              pipelineLog.debug(`[${label}] Tool use: ${block.name || "unknown"}`, {
-                data: { toolName: block.name },
-              });
-            }
-          }
-        }
+    const createParams: Anthropic.MessageCreateParams = {
+      model: CLAUDE_MODEL,
+      max_tokens: 16384,
+      system: finalSystemPrompt,
+      messages: [{ role: "user", content: userPrompt }],
+    };
+
+    if (apiTools.length > 0) {
+      createParams.tools = apiTools;
+    }
+
+    const response = await client.messages.create(createParams, {
+      signal: abortController.signal,
+    });
+
+    // Extract text blocks from response
+    for (const block of response.content) {
+      if (block.type === "text" && block.text.trim()) {
+        allTextBlocks.push(block.text);
+      }
+      if (block.type === "tool_use" || block.type === "server_tool_use") {
+        toolUseCount++;
+        const toolName = "name" in block ? block.name : "unknown";
+        pipelineLog.debug(`[${label}] Tool use: ${toolName}`, {
+          data: { toolName },
+        });
       }
     }
   } catch (err) {
     if (abortController.signal.aborted) {
       pipelineLog.error(`[${label}] Agent timed out after ${AGENT_TIMEOUT_MS / 1000}s`, {
         durationMs: timer(),
-        data: { messageCount, toolUseCount, textBlocks: allTextBlocks.length },
+        data: { toolUseCount, textBlocks: allTextBlocks.length },
       });
       throw new Error(`Agent call timed out after ${AGENT_TIMEOUT_MS / 1000}s`);
     }
-    pipelineLog.error(`[${label}] Agent stream error`, {
+    pipelineLog.error(`[${label}] API call error`, {
       durationMs: timer(),
       error: (err as Error).message,
-      data: { messageCount, toolUseCount, textBlocks: allTextBlocks.length },
+      data: { toolUseCount, textBlocks: allTextBlocks.length },
     });
     throw err;
   } finally {
@@ -149,10 +144,9 @@ export async function runAgent<T>(options: RunAgentOptions): Promise<T> {
 
   const elapsed = timer();
 
-  pipelineLog.debug(`[${label}] Agent stream complete`, {
+  pipelineLog.debug(`[${label}] API call complete`, {
     durationMs: elapsed,
     data: {
-      messageCount,
       toolUseCount,
       textBlocks: allTextBlocks.length,
       totalTextLength: allTextBlocks.reduce((sum, t) => sum + t.length, 0),
@@ -175,7 +169,7 @@ export async function runAgent<T>(options: RunAgentOptions): Promise<T> {
     }
     pipelineLog.error(`[${label}] Agent returned no text content`, {
       durationMs: elapsed,
-      data: { messageCount, textBlocks: allTextBlocks.length, toolUseCount },
+      data: { textBlocks: allTextBlocks.length, toolUseCount },
     });
     throw new Error("Agent returned no text content");
   }
