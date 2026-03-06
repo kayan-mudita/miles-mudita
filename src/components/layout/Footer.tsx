@@ -9,7 +9,7 @@ export default function Footer() {
           <div className="flex items-center gap-2">
             <span className="font-display text-lg text-cream-100">Miles</span>
             <span className="text-[10px] tracking-[0.3em] uppercase text-gold-500 font-body mt-0.5">
-              by Mudita
+              by Mudita Studios
             </span>
           </div>
 
@@ -35,7 +35,7 @@ export default function Footer() {
           </div>
 
           <p className="text-xs text-cream-300/50 font-body">
-            &copy; {new Date().getFullYear()} Mudita. All rights reserved.
+            &copy; {new Date().getFullYear()} Mudita Studios. All rights reserved.
           </p>
         </div>
       </div>

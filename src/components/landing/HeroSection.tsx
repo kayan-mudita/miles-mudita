@@ -121,7 +121,7 @@ export default function HeroSection() {
         >
           <div className="w-1.5 h-1.5 rounded-full bg-gold-500 animate-pulse" />
           <span className="text-gold-500 text-xs tracking-[0.3em] uppercase font-body font-medium">
-            Built by Mudita
+            Built by Mudita Studios
           </span>
         </motion.div>
 
@@ -141,7 +141,7 @@ export default function HeroSection() {
           transition={{ duration: 0.7, delay: 0.4 }}
           className="font-display text-xl md:text-2xl text-cream-200/80 mb-3 italic"
         >
-          The AI analyst your startup deserves.
+          The power of 10,000 brains to evaluate your big idea.
         </motion.p>
 
         <motion.div

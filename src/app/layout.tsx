@@ -19,9 +19,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Miles by Mudita — AI Startup Idea Validation",
+  title: "Miles by Mudita Studios — AI Startup Idea Validation",
   description:
-    "Validate your startup idea with institutional-grade research. Miles scores your concept across 5 dimensions and delivers a comprehensive PDF report.",
+    "The power of 10,000 brains to evaluate your big idea. Miles scores your concept across 5 dimensions and delivers a comprehensive PDF report.",
 };
 
 export default function RootLayout({

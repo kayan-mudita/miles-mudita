@@ -23,8 +23,8 @@ export default function SubmitPage() {
             What&apos;s your big idea?
           </h1>
           <p className="text-cream-300 font-body max-w-md mx-auto">
-            Miles will research it across 5 dimensions and deliver a
-            comprehensive scored report.
+            The power of 10,000 brains — Miles will research it across 5
+            dimensions and deliver a comprehensive scored report.
           </p>
         </motion.div>
 

@@ -19,7 +19,7 @@ export default function Header() {
             Miles
           </span>
           <span className="text-[10px] tracking-[0.3em] uppercase text-gold-500 font-body mt-1">
-            by Mudita
+            by Mudita Studios
           </span>
         </a>
 

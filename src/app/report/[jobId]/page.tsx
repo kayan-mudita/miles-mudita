@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import DOMPurify from "isomorphic-dompurify";
 import GoldGlow from "@/components/ui/GoldGlow";
+import Button from "@/components/ui/Button";
 import ScoreDashboard from "@/components/report/ScoreDashboard";
 import ExecutiveSummary from "@/components/report/ExecutiveSummary";
 import ChapterSection from "@/components/report/ChapterSection";
@@ -308,6 +309,93 @@ export default function ReportPage() {
 
             {/* Sources */}
             <SourcesList groups={sourceGroups} totalCount={data.totalSources} />
+
+            {/* What's Next CTAs */}
+            {!isPrint && (
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="mt-16 mb-8"
+              >
+                <div className="bg-navy-800 border border-gold-500/15 rounded-lg p-8">
+                  <h2 className="font-display text-2xl text-cream-100 mb-2 text-center">
+                    What would you like to do next?
+                  </h2>
+                  <p className="text-cream-300/60 text-sm font-body text-center mb-8">
+                    Your report is ready — here are some next steps.
+                  </p>
+
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <a
+                      href={`/api/report/${jobId}/pdf`}
+                      className="flex items-start gap-3 p-4 rounded-lg border border-gold-500/10 hover:border-gold-500/30 hover:bg-gold-500/5 transition-all group"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-500 mt-0.5 flex-shrink-0">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      <div>
+                        <p className="text-cream-100 font-body text-sm font-medium group-hover:text-gold-500 transition-colors">
+                          Download PDF
+                        </p>
+                        <p className="text-cream-300/50 text-xs font-body mt-0.5">
+                          Get a polished copy for your records
+                        </p>
+                      </div>
+                    </a>
+
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(window.location.href);
+                        const btn = document.getElementById("share-toast");
+                        if (btn) {
+                          btn.textContent = "Link copied!";
+                          setTimeout(() => { btn.textContent = "Share This Report"; }, 2000);
+                        }
+                      }}
+                      className="flex items-start gap-3 p-4 rounded-lg border border-gold-500/10 hover:border-gold-500/30 hover:bg-gold-500/5 transition-all group text-left"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-500 mt-0.5 flex-shrink-0">
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                      </svg>
+                      <div>
+                        <p id="share-toast" className="text-cream-100 font-body text-sm font-medium group-hover:text-gold-500 transition-colors">
+                          Share This Report
+                        </p>
+                        <p className="text-cream-300/50 text-xs font-body mt-0.5">
+                          Copy the link to share with your team
+                        </p>
+                      </div>
+                    </button>
+
+                    <a
+                      href="/submit"
+                      className="flex items-start gap-3 p-4 rounded-lg border border-gold-500/10 hover:border-gold-500/30 hover:bg-gold-500/5 transition-all group"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-500 mt-0.5 flex-shrink-0">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="16" />
+                        <line x1="8" y1="12" x2="16" y2="12" />
+                      </svg>
+                      <div>
+                        <p className="text-cream-100 font-body text-sm font-medium group-hover:text-gold-500 transition-colors">
+                          Validate Another Idea
+                        </p>
+                        <p className="text-cream-300/50 text-xs font-body mt-0.5">
+                          Run Miles on a different concept
+                        </p>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              </motion.section>
+            )}
           </div>
 
           {/* Sticky TOC (desktop only, hidden in print mode) */}
