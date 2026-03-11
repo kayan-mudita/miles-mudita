@@ -39,13 +39,20 @@ export function serializeDimensionForWriter(ctx: ResearchContext, dim: Dimension
     .map((s, i) => `[${i + 1}] ${s.title} - ${s.url}`)
     .join("\n");
 
+  // Cap findings to ~12,000 chars to keep prompt size manageable
+  // and avoid API timeouts on multi-round research depths
+  const MAX_FINDINGS_CHARS = 12000;
+  const findings = dimData.allFindings.length > MAX_FINDINGS_CHARS
+    ? dimData.allFindings.substring(0, MAX_FINDINGS_CHARS) + "\n\n[Research findings truncated for brevity — full data available in sources]"
+    : dimData.allFindings;
+
   return `Search Topic: ${ctx.searchTopic}
 Report Name: ${ctx.reportName}
 Dimension: ${DIMENSION_LABELS[dim]}
 Chapter Heading: ${ctx.intro?.["chapter_" + (DIMENSION_KEYS.indexOf(dim) + 1) as keyof typeof ctx.intro] || DIMENSION_LABELS[dim]}
 
 Full Research Findings for This Dimension:
-${dimData.allFindings}
+${findings}
 
 Sources (${dimData.allSources.length}):
 ${sourcesText}

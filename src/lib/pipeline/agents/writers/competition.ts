@@ -17,7 +17,7 @@ This chapter must cover:
 9. Competitor Analysis and Insights — detailed competitor breakdowns
 
 Writing requirements:
-- Write approximately 2000-3000 words of comprehensive HTML content
+- Write approximately 1500-2000 words of comprehensive HTML content
 - Include at minimum 8-10 sections/subsections using <h3> tags
 - Every factual claim MUST cite a source using inline <a href="URL">[N]</a> notation
 - Include competitor comparison tables using <table> tags
@@ -33,7 +33,7 @@ export async function writeCompetition(ctx: ResearchContext): Promise<WriterOutp
     systemPrompt: SYSTEM_PROMPT,
     userPrompt: `${context}
 
-Write a comprehensive ~3000-word HTML chapter on the Competition landscape for this startup idea. Reference sources using [N] inline citations.`,
+Write a comprehensive ~1500-2000 word HTML chapter on the Competition landscape for this startup idea. Reference sources using [N] inline citations.`,
     outputSchema: writerSchema,
     maxTurns: 1,
     agentName: "writer:competition",

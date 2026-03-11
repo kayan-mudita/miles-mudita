@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { CLAUDE_MODEL } from "./types";
 import { pipelineLog, startTimer } from "./logger";
 
-const AGENT_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes per agent call
+const AGENT_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes per agent call
 
 /**
  * Get the Anthropic API key, preferring MILES_ANTHROPIC_API_KEY

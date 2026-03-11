@@ -16,7 +16,7 @@ This chapter must cover:
 8. Strategic IP Opportunity Mapping — what IP could be built
 
 Writing requirements:
-- Write approximately 2000-3000 words of comprehensive HTML content
+- Write approximately 1500-2000 words of comprehensive HTML content
 - Include at minimum 8-10 sections/subsections using <h3> tags
 - Every factual claim MUST cite a source using inline <a href="URL">[N]</a> notation
 - Include cost estimation tables where appropriate
@@ -32,7 +32,7 @@ export async function writeCostDifficulty(ctx: ResearchContext): Promise<WriterO
     systemPrompt: SYSTEM_PROMPT,
     userPrompt: `${context}
 
-Write a comprehensive ~3000-word HTML chapter on Cost & Difficulty for this startup idea. Reference sources using [N] inline citations.`,
+Write a comprehensive ~1500-2000 word HTML chapter on Cost & Difficulty for this startup idea. Reference sources using [N] inline citations.`,
     outputSchema: writerSchema,
     maxTurns: 1,
     agentName: "writer:cost_difficulty",

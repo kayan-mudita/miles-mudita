@@ -89,7 +89,7 @@ export const deepDiveSchema = {
 export const writerSchema = {
   type: "object" as const,
   properties: {
-    chapter_html: { type: "string" as const, description: "Full HTML chapter content (~3000 words)" },
+    chapter_html: { type: "string" as const, description: "Full HTML chapter content (~1500-2000 words)" },
     sources_used: {
       type: "array" as const,
       items: { type: "string" as const },
