@@ -43,6 +43,7 @@ export async function GET(
     let summary = null;
     let intro = null;
     let totalSources = 0;
+    let contextSources: Record<string, { url: string; title: string; content: string }[]> | null = null;
 
     if (job.contextJson) {
       try {
@@ -67,6 +68,22 @@ export async function GET(
         summary = ctx.scoringSummary || null;
         intro = ctx.intro || null;
         totalSources = ctx.globalSourceIndex?.length || 0;
+
+        // Extract per-dimension sources for the report page
+        if (dims) {
+          contextSources = Object.fromEntries(
+            Object.entries(dims).map(([k, v]) => [
+              k,
+              Array.isArray(v.allSources)
+                ? (v.allSources as { url: string; title: string; content: string }[]).map((s) => ({
+                    url: s.url,
+                    title: s.title,
+                    content: s.content,
+                  }))
+                : [],
+            ])
+          );
+        }
       } catch {
         // Context parse failed — use denormalized scores
       }
@@ -93,6 +110,7 @@ export async function GET(
       summary,
       intro,
       totalSources,
+      contextSources,
       overallScore: job.overallScore,
       recommendation: job.recommendation,
       createdAt: job.createdAt,

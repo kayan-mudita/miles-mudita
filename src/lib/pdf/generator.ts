@@ -1,11 +1,33 @@
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
-import { APP_URL } from "@/lib/email/config";
+import { prisma } from "@/lib/db";
 
+/**
+ * Generate a PDF from the stored report HTML.
+ *
+ * Reads the already-assembled HTML from the database (complete document with
+ * inline styles from assembler.ts) and renders it via Puppeteer + @sparticuz/chromium.
+ *
+ * Uses page.setContent() instead of navigating to the live report URL, which avoids:
+ * - Auth cookie / middleware redirect issues
+ * - Serverless self-referencing deadlocks
+ * - Chromium timeout issues from HTTP round-trips
+ */
 export async function generateReportPDF(
   reportId: string,
-  token?: string
+  _token?: string
 ): Promise<Buffer> {
+  // 1. Fetch the stored report HTML from the database
+  const report = await prisma.report.findUnique({
+    where: { id: reportId },
+    select: { reportHtml: true },
+  });
+
+  if (!report?.reportHtml) {
+    throw new Error("Report HTML not found in database");
+  }
+
+  // 2. Launch headless Chromium
   const browser = await puppeteer.launch({
     args: chromium.args,
     defaultViewport: { width: 1280, height: 720 },
@@ -16,29 +38,11 @@ export async function generateReportPDF(
   try {
     const page = await browser.newPage();
 
-    // Set the auth session cookie so the headless browser can access
-    // the protected report page without being redirected to login.
-    if (token) {
-      const url = new URL(APP_URL);
-      await page.setCookie({
-        name: "authjs.session-token",
-        value: token,
-        domain: url.hostname,
-        path: "/",
-        httpOnly: true,
-        secure: url.protocol === "https:",
-        sameSite: "Lax",
-      });
-    }
-
-    // Load the report page
-    await page.goto(`${APP_URL}/report/${reportId}?print=true`, {
+    // Set the content directly — no HTTP request, no auth needed
+    await page.setContent(report.reportHtml, {
       waitUntil: "networkidle0",
-      timeout: 60000,
+      timeout: 30000,
     });
-
-    // Wait for content to render
-    await page.waitForSelector("[data-report-content]", { timeout: 30000 });
 
     const pdf = await page.pdf({
       format: "A4",

@@ -162,11 +162,17 @@ export default function ReportPage() {
     return "";
   });
 
-  // Build source groups from scores
-  const sourceGroups = DIMENSION_KEYS.map((k) => ({
-    dimension: DIMENSION_LABELS[k],
-    sources: [] as { url: string; title: string; content: string }[],
-  }));
+  // Build source groups from context data
+  const sourceGroups = DIMENSION_KEYS.map((k) => {
+    // Sources come from the context JSON parsed by the content API
+    const dimSources =
+      (data as Record<string, unknown> & { contextSources?: Record<string, { url: string; title: string; content: string }[]> })
+        .contextSources?.[k] ?? [];
+    return {
+      dimension: DIMENSION_LABELS[k],
+      sources: dimSources,
+    };
+  });
 
   return (
     <section
