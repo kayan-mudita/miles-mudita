@@ -239,7 +239,7 @@ export default function ReportPage() {
                       Download PDF
                     </p>
                     <p className="text-cream-300/50 text-xs font-body mt-0.5">
-                      Save as PDF via your browser&apos;s print dialog
+                      Tip: select &quot;Save as PDF&quot; and uncheck &quot;Headers and footers&quot;
                     </p>
                   </div>
                 </button>

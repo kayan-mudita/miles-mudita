@@ -169,100 +169,213 @@ html {
 
 /* ─── Print styles for PDF download ─── */
 @media print {
-  /* Hide non-report UI */
+  /* ── Page setup ── */
+  @page {
+    size: A4;
+    margin: 20mm 15mm;
+  }
+
+  /* ── Reset everything to white/black ── */
+  *, *::before, *::after {
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: #1a1a2e !important;
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* ── Hide all non-report elements ── */
   header, footer, nav,
   .grain-overlay,
   .gold-glow,
-  [data-report-content] ~ *,
-  #__next > header,
-  #__next > footer {
+  [data-cta-section],
+  [data-toc-sidebar],
+  main > *:not([data-report-content]),
+  [data-report-content]::before,
+  [data-report-content]::after {
     display: none !important;
   }
 
-  /* White background, black text */
-  body, html {
-    background: #fff !important;
-    color: #1a1a2e !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+  /* ── Remove fixed positioning from everything ── */
+  * {
+    position: static !important;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
   }
 
-  /* Report container */
+  /* ── Report container ── */
+  main {
+    padding: 0 !important;
+  }
+
   [data-report-content] {
+    position: relative !important;
     background: #fff !important;
     color: #1a1a2e !important;
     padding: 0 !important;
     margin: 0 !important;
+    overflow: visible !important;
+    min-height: auto !important;
   }
 
-  /* Override dark theme colors for print */
-  [data-report-content] h1,
-  [data-report-content] h2,
-  [data-report-content] h3 {
+  [data-report-content] > div {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* ── Typography — dark text on white ── */
+  [data-report-content] h1 {
     color: #1a1a2e !important;
+    font-size: 22pt !important;
+    margin-bottom: 4pt !important;
+  }
+
+  [data-report-content] h2 {
+    color: #1a1a2e !important;
+    font-size: 16pt !important;
+    margin-top: 12pt !important;
+  }
+
+  [data-report-content] h3 {
+    color: #333 !important;
+    font-size: 13pt !important;
+    margin-top: 10pt !important;
   }
 
   [data-report-content] p,
   [data-report-content] li,
-  [data-report-content] td,
-  [data-report-content] span {
+  [data-report-content] span,
+  [data-report-content] div {
     color: #333 !important;
   }
 
-  /* Score badges keep color */
+  [data-report-content] strong {
+    color: #1a1a2e !important;
+  }
+
+  /* ── Score cards — keep visual but print-friendly ── */
   [data-report-content] .text-gold-500 {
-    color: #c9a84c !important;
+    color: #b8960f !important;
   }
 
-  /* Tables */
-  [data-report-content] table {
-    border-collapse: collapse;
-  }
-  [data-report-content] th,
-  [data-report-content] td {
-    border: 1px solid #ddd !important;
-    padding: 6px 10px !important;
-    background: transparent !important;
-  }
-  [data-report-content] th {
-    background: #f5f5f5 !important;
-    font-weight: 600 !important;
+  [data-report-content] .text-green-400 { color: #16a34a !important; }
+  [data-report-content] .text-red-400 { color: #dc2626 !important; }
+  [data-report-content] .text-yellow-400 { color: #ca8a04 !important; }
+
+  /* Score card grid — force 5-across */
+  [data-report-content] .grid-cols-2.md\:grid-cols-5 {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 8px !important;
   }
 
-  /* Cards / bordered sections */
+  /* ── Cards and boxes ── */
   [data-report-content] [class*="bg-navy"] {
-    background: #f9f9f9 !important;
+    background: #f7f7f7 !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+  }
+
+  [data-report-content] [class*="border-gold"] {
     border-color: #ddd !important;
   }
 
-  /* Green/red indicators keep color in print */
-  .text-green-400 { color: #22c55e !important; }
-  .text-red-400 { color: #ef4444 !important; }
-  .text-yellow-400 { color: #eab308 !important; }
-
-  /* Hide TOC sidebar in print */
-  [data-toc-sidebar] {
-    display: none !important;
+  /* ── Executive summary card ── */
+  [data-report-content] #executive-summary {
+    background: #f9f9f9 !important;
+    border: 1px solid #ccc !important;
+    padding: 16pt !important;
+    page-break-inside: avoid;
   }
 
-  /* Hide CTA section in print */
-  [data-cta-section] {
-    display: none !important;
+  /* ── Tables ── */
+  [data-report-content] table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    font-size: 9pt !important;
+    page-break-inside: avoid;
   }
 
-  /* Page breaks */
+  [data-report-content] th {
+    background: #eee !important;
+    border: 1px solid #ccc !important;
+    padding: 5px 8px !important;
+    font-weight: 600 !important;
+    color: #1a1a2e !important;
+    text-align: left !important;
+  }
+
+  [data-report-content] td {
+    border: 1px solid #ddd !important;
+    padding: 5px 8px !important;
+    background: #fff !important;
+    color: #333 !important;
+  }
+
+  /* ── Links — show URL after link text ── */
+  [data-report-content] a {
+    color: #1a5fb4 !important;
+    text-decoration: underline !important;
+  }
+
+  /* ── Page breaks ── */
   [data-report-content] section[id^="chapter-"] {
     page-break-before: always;
   }
+
   [data-report-content] #scoring-details {
     page-break-before: always;
   }
 
-  /* Remove fixed positioning */
-  * {
-    position: static !important;
+  [data-report-content] #sources {
+    page-break-before: always;
   }
-  [data-report-content] {
-    position: relative !important;
+
+  /* Avoid breaking inside cards */
+  [data-report-content] .rounded-lg {
+    page-break-inside: avoid;
+  }
+
+  /* ── Chapter numbers ── */
+  [data-report-content] .text-5xl.text-gold-500\/30 {
+    color: #ccc !important;
+  }
+
+  /* ── Scoring detail cards ── */
+  [data-report-content] #scoring-details > div {
+    page-break-inside: avoid;
+    margin-bottom: 12pt !important;
+  }
+
+  /* ── Recommendation badge ── */
+  [data-report-content] .tracking-wider.border {
+    border: 2px solid currentColor !important;
+    padding: 4px 12px !important;
+  }
+
+  /* ── Overall score ── */
+  [data-report-content] .text-6xl {
+    font-size: 36pt !important;
+    color: #b8960f !important;
+  }
+
+  /* ── Grid layout — flatten to single column ── */
+  [data-report-content] .lg\:grid {
+    display: block !important;
+  }
+
+  /* ── Sub-header meta text ── */
+  [data-report-content] .tracking-\[0\.3em\] {
+    color: #b8960f !important;
+    letter-spacing: 0.2em !important;
   }
 }
