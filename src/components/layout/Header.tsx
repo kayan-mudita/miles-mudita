@@ -101,19 +101,6 @@ export default function Header() {
           ) : (
             <>
               <a
-                href="/studios"
-                className="text-xs tracking-widest uppercase font-body px-3 py-1.5 rounded-full border border-gold-500/40 text-gold-500 hover:border-gold-500 hover:text-gold-400 transition-colors"
-              >
-                Mudita Studios
-              </a>
-              <a
-                href="/lab"
-                className="flex items-center gap-1.5 text-xs tracking-widest uppercase font-body px-3 py-1.5 rounded-full border border-orange-500/40 text-orange-400 hover:border-orange-400 transition-colors"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-                2026 Cohort
-              </a>
-              <a
                 href="/#how-it-works"
                 className="text-sm text-cream-300 hover:text-cream-100 transition-colors font-body"
               >
@@ -209,21 +196,6 @@ export default function Header() {
                 </>
               ) : (
                 <>
-                  <a
-                    href="/studios"
-                    className="text-xs tracking-widest uppercase font-body px-3 py-1.5 rounded-full border border-gold-500/40 text-gold-500 self-start"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Mudita Studios
-                  </a>
-                  <a
-                    href={"/lab"}
-                    className="flex items-center gap-1.5 text-xs tracking-widest uppercase font-body px-3 py-1.5 rounded-full border border-orange-500/40 text-orange-400 self-start"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-                    2026 Cohort
-                  </a>
                   <a
                     href="/#how-it-works"
                     className="text-sm text-cream-300 hover:text-cream-100 transition-colors font-body"
