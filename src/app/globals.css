@@ -240,9 +240,13 @@ html {
   .text-red-400 { color: #ef4444 !important; }
   .text-yellow-400 { color: #eab308 !important; }
 
-  /* Hide "What's Next" CTA section and TOC sidebar */
-  [data-report-content] section:has(> .bg-navy-800 > h2),
-  [data-report-content] .hidden.lg\\:block {
+  /* Hide TOC sidebar in print */
+  [data-toc-sidebar] {
+    display: none !important;
+  }
+
+  /* Hide CTA section in print */
+  [data-cta-section] {
     display: none !important;
   }
 

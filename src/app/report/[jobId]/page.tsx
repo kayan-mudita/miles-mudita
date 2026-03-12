@@ -210,6 +210,7 @@ export default function ReportPage() {
         {/* What's Next CTAs */}
         {!isPrint && (
           <motion.div
+            data-cta-section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -406,7 +407,7 @@ export default function ReportPage() {
 
           {/* Sticky TOC (desktop only, hidden in print mode) */}
           {!isPrint && (
-            <div className="hidden lg:block">
+            <div data-toc-sidebar className="hidden lg:block">
               <TableOfContents items={tocItems} />
             </div>
           )}
