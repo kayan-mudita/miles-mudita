@@ -4,8 +4,9 @@ import { ScorerOutput, ResearchContext, DimensionKey, DIMENSION_LABELS } from ".
 import { serializeDimensionForScorer } from "../../researchContext";
 
 const RUBRICS: Record<DimensionKey, string> = {
-  market_environment: `Categories:
-1: TAM (Total Addressable Market)
+  market_environment: `Categories (with weights for weighted average):
+
+1. TAM (Total Addressable Market) — Weight: 3
   1 = <$100M
   2 = $100M-$150M
   3 = $150M-$250M
@@ -17,7 +18,7 @@ const RUBRICS: Record<DimensionKey, string> = {
   9 = $3B-$10B
   10 = >$10B
 
-2. Market Growth Rate
+2. Market Growth Rate — Weight: 3
   1 = <2% (stagnant/declining)
   2 = 2%
   3 = 3%
@@ -27,10 +28,13 @@ const RUBRICS: Record<DimensionKey, string> = {
   7 = 9-10%
   8 = 11-15%
   9 = 16-20%
-  10 = >20%`,
+  10 = >20%
 
-  competition: `Categories:
-1: Capital Raised by Competitors
+Overall dimension score = (TAM × 3 + Growth × 3) / 6`,
+
+  competition: `Categories (with weights for weighted average):
+
+1. Capital Raised by Competitors — Weight: 2
   1 = >$1B
   2 = $750M-$1B
   3 = $500M-$750M
@@ -42,7 +46,7 @@ const RUBRICS: Record<DimensionKey, string> = {
   9 = $5M-$10M
   10 = <$5M
 
-2. Competitor Landscape
+2. Competitor Landscape — Weight: 2
   1 = Many well-funded dominant players
   2 = Several well-funded with strong traction
   3 = Multiple direct competitors with scale
@@ -54,7 +58,7 @@ const RUBRICS: Record<DimensionKey, string> = {
   9 = Essentially no credible competitors
   10 = Zero companies
 
-3. Ease of Copying / Moat
+3. Ease of Copying / Moat — Weight: 2
   1 = Trivially copyable, no barriers
   2 = Easy to copy, no moat
   3 = Visible idea, modest differentiation
@@ -66,7 +70,7 @@ const RUBRICS: Record<DimensionKey, string> = {
   9 = Regulation/network effects
   10 = Patents/exclusive rights, near impossible to copy
 
-4. Winner-Takes-All Dynamics
+4. Winner-Takes-All Dynamics — Weight: 2
   1 = Already won by incumbent
   2 = Emerging dominant leader
   3 = Consolidated, winner-takes-most
@@ -76,10 +80,13 @@ const RUBRICS: Record<DimensionKey, string> = {
   7 = Niche opening in WTA market
   8 = Wide opening in WTA, no leader
   9 = Strong WTA potential, unblocked
-  10 = Unclaimed WTA proposition`,
+  10 = Unclaimed WTA proposition
 
-  cost_difficulty: `Categories:
-1. Capital Required (Initial Startup Cost)
+Overall dimension score = (Funding × 2 + Landscape × 2 + Moat × 2 + WTA × 2) / 8`,
+
+  cost_difficulty: `Categories (with weights for weighted average):
+
+1. Capital Required (Initial Startup Cost) — Weight: 4
   1 = >$10M
   2 = $5M-$10M
   3 = $3M-$5M
@@ -91,7 +98,7 @@ const RUBRICS: Record<DimensionKey, string> = {
   9 = $50K-$100K
   10 = <$50K
 
-2. Technology Required
+2. Technology Required — Weight: 3
   1 = "Miracle tech" only, impossible today
   2 = Multi-year deep R&D, extreme risk
   3 = Novel algorithms/hardware, breakthrough required
@@ -103,7 +110,7 @@ const RUBRICS: Record<DimensionKey, string> = {
   9 = Standard SaaS/app tech
   10 = Commodity tech, trivial to build
 
-3. GTM Difficulty
+3. GTM Difficulty — Weight: 5
   1 = Very hard (12+ month cycles, lobbying)
   2 = Hard (enterprise 6-12 month cycles)
   3 = Enterprise mid-market, friction
@@ -115,7 +122,7 @@ const RUBRICS: Record<DimensionKey, string> = {
   9 = Easy sales, viral or bottom-up
   10 = Viral/self-serve, negligible friction
 
-4. Land and Expand Potential
+4. Land and Expand Potential — Weight: 3
   1 = One-and-done sale
   2 = Very limited expansion
   3 = Limited recurring, occasional add-ons
@@ -125,10 +132,13 @@ const RUBRICS: Record<DimensionKey, string> = {
   7 = Strong upsell in accounts
   8 = Built-in expansion (seats, teams)
   9 = Multi-vector expansion
-  10 = Continuous land/expand, usage-based`,
+  10 = Continuous land/expand, usage-based
 
-  product_need: `Categories:
-1. Problem Urgency
+Overall dimension score = (Capital × 4 + Tech × 3 + GTM × 5 + L&E × 3) / 15`,
+
+  product_need: `Categories (with weights for weighted average):
+
+1. Problem Urgency — Weight: 4
   1 = No clear problem
   2 = Low priority, episodic
   3 = Nice-to-have
@@ -138,10 +148,13 @@ const RUBRICS: Record<DimensionKey, string> = {
   7 = High priority, real inefficiency/cost
   8 = Strong pain point, unlocks big value
   9 = Hair-on-fire problem for some
-  10 = Critical mission-level painkiller`,
+  10 = Critical mission-level painkiller
 
-  financial_return: `Categories:
-1. Exit Likelihood (3-5 Years)
+Overall dimension score = Problem Urgency score`,
+
+  financial_return: `Categories (with weights for weighted average):
+
+1. Exit Likelihood (3-5 Years) — Weight: 4
   1 = Very unlikely, no acquirers
   2 = Unlikely, 7-10+ years
   3 = Low likelihood, few acquirers
@@ -151,7 +164,9 @@ const RUBRICS: Record<DimensionKey, string> = {
   7 = Reasonably likely, moderate acquirers
   8 = Strong likelihood, several acquirers
   9 = Very likely, many acquirers or IPO
-  10 = Extremely likely, hot sector, fast exits`,
+  10 = Extremely likely, hot sector, fast exits
+
+Overall dimension score = Exit Likelihood score`,
 };
 
 export async function scorerAgent(
@@ -166,7 +181,8 @@ export async function scorerAgent(
 Your job is to score evidence and insights, and then map them to the scoring rubric below.
 
 Interpret the signals — what they imply for risk, attractiveness, and differentiation.
-Assign a score (1-10) and justify with qualitative reasoning.
+Assign a score (1-10) per category and justify with qualitative reasoning.
+Use the FULL 1-10 range. A 5 is average. Do not default to 6-7 out of caution — if the evidence is strong, score 8-10. If the evidence is weak, score 1-4.
 
 Scoring Rubric for ${label}:
 ${rubric}
@@ -174,10 +190,11 @@ ${rubric}
 For each category in the rubric:
 - Summarize specific evidence (Qual signals)
 - Explain the meaning (Interpretation)
-- Assign a tentative score: X/10
+- Assign a score: X/10
 
-Then provide:
-- An overall dimension score (average of category scores, rounded to 1 decimal)
+Then calculate the overall dimension score using the WEIGHTED AVERAGE formula shown at the bottom of the rubric. Round to 1 decimal place.
+
+Also provide:
 - Justification paragraph
 - Top 3 strengths
 - Top 3 weaknesses
