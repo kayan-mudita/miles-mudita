@@ -166,3 +166,99 @@ html {
   background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.3), transparent);
   animation: scan-line 4s linear infinite;
 }
+
+/* ─── Print styles for PDF download ─── */
+@media print {
+  /* Hide non-report UI */
+  header, footer, nav,
+  .grain-overlay,
+  .gold-glow,
+  [data-report-content] ~ *,
+  #__next > header,
+  #__next > footer {
+    display: none !important;
+  }
+
+  /* White background, black text */
+  body, html {
+    background: #fff !important;
+    color: #1a1a2e !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Report container */
+  [data-report-content] {
+    background: #fff !important;
+    color: #1a1a2e !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Override dark theme colors for print */
+  [data-report-content] h1,
+  [data-report-content] h2,
+  [data-report-content] h3 {
+    color: #1a1a2e !important;
+  }
+
+  [data-report-content] p,
+  [data-report-content] li,
+  [data-report-content] td,
+  [data-report-content] span {
+    color: #333 !important;
+  }
+
+  /* Score badges keep color */
+  [data-report-content] .text-gold-500 {
+    color: #c9a84c !important;
+  }
+
+  /* Tables */
+  [data-report-content] table {
+    border-collapse: collapse;
+  }
+  [data-report-content] th,
+  [data-report-content] td {
+    border: 1px solid #ddd !important;
+    padding: 6px 10px !important;
+    background: transparent !important;
+  }
+  [data-report-content] th {
+    background: #f5f5f5 !important;
+    font-weight: 600 !important;
+  }
+
+  /* Cards / bordered sections */
+  [data-report-content] [class*="bg-navy"] {
+    background: #f9f9f9 !important;
+    border-color: #ddd !important;
+  }
+
+  /* Green/red indicators keep color in print */
+  .text-green-400 { color: #22c55e !important; }
+  .text-red-400 { color: #ef4444 !important; }
+  .text-yellow-400 { color: #eab308 !important; }
+
+  /* Hide "What's Next" CTA section and TOC sidebar */
+  [data-report-content] section:has(> .bg-navy-800 > h2),
+  [data-report-content] .hidden.lg\\:block {
+    display: none !important;
+  }
+
+  /* Page breaks */
+  [data-report-content] section[id^="chapter-"] {
+    page-break-before: always;
+  }
+  [data-report-content] #scoring-details {
+    page-break-before: always;
+  }
+
+  /* Remove fixed positioning */
+  * {
+    position: static !important;
+  }
+  [data-report-content] {
+    position: relative !important;
+  }
+}

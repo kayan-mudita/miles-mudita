@@ -333,9 +333,9 @@ export default function ReportPage() {
                   </p>
 
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <a
-                      href={`/api/report/${jobId}/pdf`}
-                      className="flex items-start gap-3 p-4 rounded-lg border border-gold-500/10 hover:border-gold-500/30 hover:bg-gold-500/5 transition-all group"
+                    <button
+                      onClick={() => window.print()}
+                      className="flex items-start gap-3 p-4 rounded-lg border border-gold-500/10 hover:border-gold-500/30 hover:bg-gold-500/5 transition-all group text-left"
                     >
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gold-500 mt-0.5 flex-shrink-0">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -347,10 +347,10 @@ export default function ReportPage() {
                           Download PDF
                         </p>
                         <p className="text-cream-300/50 text-xs font-body mt-0.5">
-                          Get a polished copy for your records
+                          Save as PDF via your browser&apos;s print dialog
                         </p>
                       </div>
-                    </a>
+                    </button>
 
                     <button
                       onClick={() => {
