@@ -29,7 +29,7 @@ Based on all 5 dimension scores, you must:
    - "What Gives Us Pause" — 3 bullet points with bold lead-ins
    - "What Would Need To Be True to Succeed" — 4-5 numbered points
 
-4. Create a scoring table (HTML) with all dimensions, their scores, and brief justifications.
+4. Create a scoring table (HTML) with columns: Dimension, Score (out of 10), and a brief Justification. Do NOT show weights or percentages in the table — only show the dimension name, score, and justification.
 
 5. List top 3 overall strengths and top 3 overall risks.`;
 
