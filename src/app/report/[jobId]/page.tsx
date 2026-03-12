@@ -60,6 +60,8 @@ type ReportData = {
     chapter_5: string;
   } | null;
   totalSources: number;
+  searchTopic?: string;
+  reportName?: string;
 };
 
 export default function ReportPage() {
@@ -205,6 +207,18 @@ export default function ReportPage() {
             {data.totalSources} Sources
             {formattedDate && <> &middot; {formattedDate}</>}
           </p>
+
+          {/* Original prompt */}
+          {data.searchTopic && (
+            <div className="mt-6 max-w-2xl mx-auto">
+              <p className="text-cream-300/40 text-xs tracking-[0.2em] uppercase font-body mb-2">
+                Original Prompt
+              </p>
+              <p className="text-cream-300/70 text-sm font-body leading-relaxed italic">
+                &ldquo;{data.searchTopic}&rdquo;
+              </p>
+            </div>
+          )}
         </motion.div>
 
         {/* What's Next CTAs */}
