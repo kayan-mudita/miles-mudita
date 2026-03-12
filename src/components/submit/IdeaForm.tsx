@@ -474,7 +474,7 @@ export default function IdeaForm() {
             </Button>
 
             <p className="text-center text-cream-300/50 text-xs font-body">
-              Reports take {selectedDepth.time}. We&apos;ll email you when ready.
+              Reports take {selectedDepth.time}. You can track progress in real time.
             </p>
           </motion.form>
         )}
