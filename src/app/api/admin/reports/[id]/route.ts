@@ -92,3 +92,52 @@ export async function GET(
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const { action } = await req.json();
+
+    if (action === "kill") {
+      const report = await prisma.report.findUnique({
+        where: { id },
+        select: { status: true },
+      });
+
+      if (!report) {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
+
+      if (report.status !== "RUNNING" && report.status !== "QUEUED") {
+        return NextResponse.json(
+          { error: `Cannot kill report with status ${report.status}` },
+          { status: 400 }
+        );
+      }
+
+      await prisma.report.update({
+        where: { id },
+        data: {
+          status: "FAILED",
+          error: "Killed by admin",
+          stage: "killed",
+          progress: 0,
+        },
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  } catch (err) {
+    console.error("Admin report PATCH error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

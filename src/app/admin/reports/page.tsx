@@ -559,16 +559,39 @@ export default function AdminReportsPage() {
                                 </div>
 
                                 {/* Actions */}
-                                {detail.status === "COMPLETED" && (
-                                  <a
-                                    href={`/report/${detail.id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block w-full text-center px-4 py-2.5 rounded-lg bg-gold-500/10 text-gold-500 border border-gold-500/20 text-sm hover:bg-gold-500/20 transition-colors"
-                                  >
-                                    View Full Report
-                                  </a>
-                                )}
+                                <div className="space-y-2">
+                                  {detail.status === "COMPLETED" && (
+                                    <a
+                                      href={`/report/${detail.id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="block w-full text-center px-4 py-2.5 rounded-lg bg-gold-500/10 text-gold-500 border border-gold-500/20 text-sm hover:bg-gold-500/20 transition-colors"
+                                    >
+                                      View Full Report
+                                    </a>
+                                  )}
+                                  {(detail.status === "RUNNING" || detail.status === "QUEUED") && (
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (!confirm(`Kill report "${detail.reportName}"? This will mark it as failed.`)) return;
+                                        const res = await fetch(`/api/admin/reports/${detail.id}`, {
+                                          method: "PATCH",
+                                          headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ action: "kill" }),
+                                        });
+                                        if (res.ok) {
+                                          setSelectedId(null);
+                                          setDetail(null);
+                                          loadReports();
+                                        }
+                                      }}
+                                      className="block w-full text-center px-4 py-2.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 text-sm hover:bg-red-500/20 transition-colors"
+                                    >
+                                      Kill Report
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           ) : (
