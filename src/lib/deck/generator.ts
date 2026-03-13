@@ -1,5 +1,7 @@
 import { generateNarrative, DeckNarrative } from "./narrator";
 import { buildDeck } from "./builder";
+import { generateDeckCode } from "./codeGenerator";
+import { validateDeckCode, executeDeckCode } from "./codeExecutor";
 export type { DimensionScore } from "./builder";
 
 // ── Public Types ──────────────────────────────────────────────────
@@ -117,19 +119,46 @@ function buildFallbackNarrative(data: PitchDeckData): DeckNarrative {
   };
 }
 
-// ── Main Orchestrator ─────────────────────────────────────────────
+// ── Main Orchestrator — Three-Tier Fallback ───────────────────────
 
 export async function generatePitchDeck(
   data: PitchDeckData
 ): Promise<Buffer> {
-  let narrative: DeckNarrative;
-
+  // ── Tier 1: Claude code-gen → bespoke deck ──
   try {
+    console.log("[deck] Tier 1: Generating bespoke deck via Claude code-gen...");
+    const code = await generateDeckCode(data);
+
+    const validation = validateDeckCode(code);
+    if (!validation.valid) {
+      throw new Error(`Code validation failed: ${validation.reason}`);
+    }
+
+    const date = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+    });
+
+    const buffer = await executeDeckCode(code, {
+      reportName: data.reportName,
+      searchTopic: data.searchTopic,
+      date,
+    });
+
+    console.log("[deck] Tier 1 SUCCESS — bespoke deck generated");
+    return buffer;
+  } catch (err) {
+    console.error("[deck] Tier 1 FAILED — falling back to template:", err);
+  }
+
+  // ── Tier 2: Claude narrative → template deck ──
+  try {
+    console.log("[deck] Tier 2: Generating narrative + template deck...");
     const introText = data.intro?.introduction
       ? stripHtml(data.intro.introduction).slice(0, 1500)
       : null;
 
-    narrative = await generateNarrative(
+    const narrative = await generateNarrative(
       data.reportName,
       data.searchTopic,
       data.scores,
@@ -137,11 +166,21 @@ export async function generatePitchDeck(
       introText,
       data.dimensionFindings ?? null
     );
+
+    const buffer = await buildDeck(
+      { reportName: data.reportName, searchTopic: data.searchTopic },
+      narrative
+    );
+
+    console.log("[deck] Tier 2 SUCCESS — template deck generated");
+    return buffer;
   } catch (err) {
-    console.error("Narrative generation failed, using fallback:", err);
-    narrative = buildFallbackNarrative(data);
+    console.error("[deck] Tier 2 FAILED — falling back to static:", err);
   }
 
+  // ── Tier 3: Static fallback narrative → template deck ──
+  console.log("[deck] Tier 3: Using static fallback narrative...");
+  const narrative = buildFallbackNarrative(data);
   return buildDeck(
     { reportName: data.reportName, searchTopic: data.searchTopic },
     narrative
