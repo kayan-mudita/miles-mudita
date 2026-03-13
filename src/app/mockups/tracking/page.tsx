@@ -55,7 +55,7 @@ export default function MockupTracking() {
           transition={{ delay: 0.5 }}
           className="text-cream-300 text-sm font-body text-center mb-8"
         >
-          Deep research across 1000+ sources
+          Deep research across hundreds of sources
         </motion.p>
 
         {/* Stage timeline */}

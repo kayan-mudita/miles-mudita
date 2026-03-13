@@ -7,14 +7,14 @@ const SYSTEM_PROMPT = `You are a senior investment analyst creating a scoring su
 
 Based on all 5 dimension scores, you must:
 
-1. Calculate an overall weighted score (1-10) using these EXACT weights (based on category importance):
-   - Market Environment: 16.2% weight (6/37)
-   - Competition: 21.6% weight (8/37)
-   - Cost & Difficulty: 40.5% weight (15/37) — this is the heaviest dimension
-   - Product Need: 10.8% weight (4/37)
-   - Financial Return: 10.8% weight (4/37)
+1. Calculate an overall weighted score (1-10) using these EXACT weights:
+   - Market Environment: 20% weight (4/20)
+   - Competition: 20% weight (4/20)
+   - Cost & Difficulty: 20% weight (4/20)
+   - Product Need: 25% weight (5/20) — this is the heaviest dimension
+   - Financial Return: 15% weight (3/20)
 
-   Formula: overall = (Market × 6 + Competition × 8 + Cost × 15 + Product × 4 + Financial × 4) / 37
+   Formula: overall = (Market × 4 + Competition × 4 + Cost × 4 + Product × 5 + Financial × 3) / 20
 
 2. Make a recommendation:
    - GO: Overall score >= 7.0 and no dimension below 4.0

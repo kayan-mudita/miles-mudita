@@ -206,8 +206,8 @@ export default function HeroSection() {
           className="text-base md:text-lg text-cream-300 max-w-2xl mx-auto mb-12 leading-relaxed font-body"
         >
           Miles validates startup ideas with institutional-grade research.
-          Five dimensions of analysis. Twenty-five real sources. A scored
-          PDF report with a clear Go or No-Go — delivered in 40 minutes.
+          Five dimensions of analysis. Hundreds of real sources. A scored
+          PDF report with a clear Go or No-Go — delivered in minutes.
         </motion.p>
 
         {/* Inline idea form */}
@@ -270,8 +270,8 @@ export default function HeroSection() {
           {[
             { value: "25+", label: "Sources Per Report" },
             { value: "5", label: "Scoring Dimensions" },
-            { value: "12", label: "Sub-Dimensions" },
-            { value: "~40m", label: "Turnaround" },
+            { value: "16", label: "Sub-Dimensions" },
+            { value: "~10m", label: "Turnaround" },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}

@@ -18,7 +18,7 @@ const features = [
         <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
       </svg>
     ),
-    title: "40-Minute Delivery",
+    title: "Minutes, Not Weeks",
     description: "From submission to scored PDF in your inbox. No waiting days for consultants.",
   },
   {
@@ -28,7 +28,7 @@ const features = [
       </svg>
     ),
     title: "Evidence-Based",
-    description: "Every score is backed by real research from 25+ sources. No hallucinations, no guesswork.",
+    description: "Every score is backed by real research from hundreds of sources. No hallucinations, no guesswork.",
   },
 ];
 

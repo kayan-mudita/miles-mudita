@@ -5,16 +5,16 @@ import GoldGlow from "@/components/ui/GoldGlow";
 
 const benefits = [
   {
-    stat: "25+",
-    text: "real sources researched per dimension — not summaries of summaries",
+    stat: "100+",
+    text: "real sources researched per report — not summaries of summaries",
   },
   {
     stat: "1-10",
-    text: "evidence-based scoring across 12 sub-dimensions with clear reasoning",
+    text: "evidence-based scoring across 16 sub-dimensions with clear reasoning",
   },
   {
-    stat: "2x",
-    text: "deliverables — a Net-Net one-pager plus a comprehensive scored PDF",
+    stat: "PDF",
+    text: "comprehensive scored report with research findings and Go/No-Go recommendation",
   },
   {
     stat: "Go/No-Go",

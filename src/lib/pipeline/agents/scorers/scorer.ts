@@ -150,11 +150,59 @@ Overall dimension score = (Capital × 4 + Tech × 3 + GTM × 5 + L&E × 3) / 15`
   9 = Hair-on-fire problem for some
   10 = Critical mission-level painkiller
 
-Overall dimension score = Problem Urgency score`,
+2. Willingness to Pay — Weight: 3
+  1 = No evidence anyone would pay
+  2 = Users expect this for free
+  3 = Tiny budgets, heavy price sensitivity
+  4 = Some willingness, but low priority spend
+  5 = Moderate — would pay if clearly better
+  6 = Established budget category, fair WTP
+  7 = Strong WTP, replaces existing spend
+  8 = High WTP, solves expensive problem
+  9 = Eager buyers, budget already allocated
+  10 = Urgent buyer, price is secondary to solution
+
+3. Frequency & Retention — Weight: 3
+  1 = One-time use, no reason to return
+  2 = Rare use (once a year or less)
+  3 = Occasional use (a few times a year)
+  4 = Periodic use (monthly)
+  5 = Regular use (bi-weekly)
+  6 = Frequent use (weekly)
+  7 = High frequency (multiple times per week)
+  8 = Daily use, habit-forming
+  9 = Multiple daily uses, deeply embedded
+  10 = Always-on, mission-critical workflow
+
+Overall dimension score = (Urgency × 4 + WTP × 3 + Frequency × 3) / 10`,
 
   financial_return: `Categories (with weights for weighted average):
 
-1. Exit Likelihood (3-5 Years) — Weight: 4
+1. Revenue Model Strength — Weight: 3
+  1 = No clear revenue model
+  2 = Highly speculative, unproven model
+  3 = Weak model, heavy reliance on ads or volume
+  4 = Plausible model, low pricing power
+  5 = Standard model, moderate pricing power
+  6 = Solid recurring model (SaaS, subscription)
+  7 = Strong recurring model with expansion revenue
+  8 = Multiple revenue streams, strong pricing power
+  9 = Exceptional model, usage-based with high retention
+  10 = Best-in-class model, compounding revenue with network effects
+
+2. Unit Economics & Margins — Weight: 4
+  1 = Negative unit economics, no path to profitability
+  2 = Deeply negative, requires massive scale
+  3 = Negative, but path visible at scale
+  4 = Breakeven at scale, thin margins
+  5 = Modest positive margins (30-40%)
+  6 = Healthy margins (50-60%)
+  7 = Strong margins (60-70%)
+  8 = Very strong margins (70-80%), efficient delivery
+  9 = Exceptional margins (80%+), software-like
+  10 = Near-zero marginal cost, 90%+ gross margins
+
+3. Exit Likelihood (3-5 Years) — Weight: 3
   1 = Very unlikely, no acquirers
   2 = Unlikely, 7-10+ years
   3 = Low likelihood, few acquirers
@@ -166,7 +214,7 @@ Overall dimension score = Problem Urgency score`,
   9 = Very likely, many acquirers or IPO
   10 = Extremely likely, hot sector, fast exits
 
-Overall dimension score = Exit Likelihood score`,
+Overall dimension score = (Revenue × 3 + UnitEcon × 4 + Exit × 3) / 10`,
 };
 
 export async function scorerAgent(

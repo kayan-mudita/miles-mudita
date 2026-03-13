@@ -41,7 +41,7 @@ export const PROCESS_STEPS = [
     number: "02",
     title: "Miles Researches",
     description:
-      "Our AI analyst dives deep across 25+ sources per dimension.",
+      "Our AI analyst dives deep across hundreds of real sources.",
   },
   {
     number: "03",
@@ -55,12 +55,12 @@ export const FAQ_ITEMS = [
   {
     question: "How long does a report take?",
     answer:
-      "Miles typically delivers your full report in about 40 minutes. You can track progress in real time on your dashboard and view the complete scored report as soon as it's ready.",
+      "Quick reports are delivered in about 10 minutes. Standard and Deep reports take 15–45 minutes depending on depth. You can track progress in real time on your dashboard.",
   },
   {
     question: "What's included in the report?",
     answer:
-      "Each report covers 5 dimensions with 12 sub-dimensions total, evidence-based scoring from 1-10, detailed research findings from 25+ sources, a net-net one-pager, and a clear Go/No-Go recommendation.",
+      "Each report covers 5 dimensions with 16 sub-dimensions total, evidence-based scoring from 1-10, detailed research findings from hundreds of sources, and a clear Go/No-Go recommendation.",
   },
   {
     question: "How does the scoring work?",
@@ -86,7 +86,7 @@ export const FAQ_ITEMS = [
 
 export const TRACKING_STAGES = [
   { label: "Planning", description: "Designing research strategy", stage: "planning" },
-  { label: "Researching", description: "Deep research across 1000+ sources", stage: "researching" },
+  { label: "Researching", description: "Deep research across hundreds of sources", stage: "researching" },
   { label: "Writing", description: "Composing report chapters", stage: "writing" },
   { label: "Scoring", description: "Evaluating across 5 dimensions", stage: "scoring" },
   { label: "Generating", description: "Assembling your report", stage: "generating" },
