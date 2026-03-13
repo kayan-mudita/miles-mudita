@@ -1,5 +1,5 @@
 [build]
-  command = "npx prisma generate && node scripts/patch-prisma-esm.cjs && npm run build"
+  command = "npx prisma generate && node scripts/patch-prisma-esm.cjs && next build"
   publish = ".next"
 
 [functions]

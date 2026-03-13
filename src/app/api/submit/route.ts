@@ -3,12 +3,9 @@ import { auth } from "@/lib/auth/config";
 import { prisma } from "@/lib/db";
 import { createJob } from "@/lib/pipeline/jobStore";
 import { getApiKey } from "@/lib/pipeline/runAgent";
-import { checkRateLimit } from "@/lib/rateLimit";
 import { pipelineLog } from "@/lib/pipeline/logger";
 
 export const runtime = "nodejs";
-
-const SUBMIT_LIMIT = 10;
 
 const DEPTH_ROUNDS: Record<string, number> = {
   QUICK: 1,
@@ -21,14 +18,6 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { limited } = await checkRateLimit(session.user.id, SUBMIT_LIMIT);
-    if (limited) {
-      return NextResponse.json(
-        { error: "Too many submissions. Please try again later." },
-        { status: 429 }
-      );
     }
 
     const body = await req.json();
@@ -112,19 +101,24 @@ export async function POST(req: NextRequest) {
         data: { jobId: report.id, maxRounds, bgUrl },
       });
 
-      fetch(bgUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-pipeline-secret": pipelineSecret,
-        },
-        body: JSON.stringify({
-          jobId: report.id,
-          searchTopic,
-          reportName,
-          maxRounds,
-        }),
-      }).catch(async (err) => {
+      try {
+        const bgRes = await fetch(bgUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-pipeline-secret": pipelineSecret,
+          },
+          body: JSON.stringify({
+            jobId: report.id,
+            searchTopic,
+            reportName,
+            maxRounds,
+          }),
+        });
+        pipelineLog.info(`Background function triggered for job ${report.id}`, {
+          data: { jobId: report.id, bgStatus: bgRes.status },
+        });
+      } catch (err) {
         pipelineLog.error(
           `Failed to trigger background function for job ${report.id}`,
           {
@@ -136,7 +130,7 @@ export async function POST(req: NextRequest) {
           where: { id: report.id },
           data: { status: "FAILED", error: "Failed to start report pipeline. Please retry." },
         }).catch(() => {});
-      });
+      }
     } else {
       // In local development: fire-and-forget in the same process
       pipelineLog.info("Launching pipeline (fire-and-forget, local dev)", {

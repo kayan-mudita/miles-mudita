@@ -2,12 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createJob } from "@/lib/pipeline/jobStore";
 import { getApiKey } from "@/lib/pipeline/runAgent";
-import { checkRateLimit } from "@/lib/rateLimit";
 import { pipelineLog } from "@/lib/pipeline/logger";
 
 export const runtime = "nodejs";
-
-const ANON_SUBMIT_LIMIT = 3; // stricter: 3/hour per anonymous user
 
 function generateAnonId(): string {
   // Simple cuid-like ID using timestamp + random
@@ -56,15 +53,6 @@ export async function POST(req: NextRequest) {
       anonId = newUser.id;
     } else {
       userId = userId!;
-    }
-
-    // Rate limit: 3/hour for anonymous users
-    const { limited } = await checkRateLimit(userId, ANON_SUBMIT_LIMIT);
-    if (limited) {
-      return NextResponse.json(
-        { error: "Too many submissions. Create a free account for more." },
-        { status: 429 }
-      );
     }
 
     const apiKey = getApiKey();
