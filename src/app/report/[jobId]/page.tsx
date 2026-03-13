@@ -72,6 +72,7 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [formattedDate, setFormattedDate] = useState("");
+  const [deckLoading, setDeckLoading] = useState(false);
 
   useEffect(() => {
     async function fetchReport() {
@@ -238,7 +239,7 @@ export default function ReportPage() {
                 Your report is ready — here are some next steps.
               </p>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button
                   onClick={() => window.print()}
                   className="flex items-start gap-3 p-4 rounded-lg border border-gold-500/10 hover:border-gold-500/30 hover:bg-gold-500/5 transition-all group text-left"
@@ -254,6 +255,53 @@ export default function ReportPage() {
                     </p>
                     <p className="text-cream-300/50 text-xs font-body mt-0.5">
                       Tip: select &quot;Save as PDF&quot; and uncheck &quot;Headers and footers&quot;
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  disabled={deckLoading}
+                  onClick={async () => {
+                    setDeckLoading(true);
+                    try {
+                      const res = await fetch(`/api/report/${jobId}/pitch`);
+                      if (!res.ok) throw new Error("Failed to generate deck");
+                      const blob = await res.blob();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `${data?.reportName || "Report"}-Pitch-Deck.pptx`;
+                      document.body.appendChild(a);
+                      a.click();
+                      a.remove();
+                      URL.revokeObjectURL(url);
+                    } catch {
+                      alert("Failed to generate pitch deck. Please try again.");
+                    } finally {
+                      setDeckLoading(false);
+                    }
+                  }}
+                  className="flex items-start gap-3 p-4 rounded-lg border border-gold-500/10 hover:border-gold-500/30 hover:bg-gold-500/5 transition-all group text-left disabled:opacity-50 disabled:cursor-wait"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-gold-500 mt-0.5 flex-shrink-0 ${deckLoading ? "animate-spin" : ""}`}>
+                    {deckLoading ? (
+                      <>
+                        <circle cx="12" cy="12" r="10" strokeDasharray="31.4 31.4" />
+                      </>
+                    ) : (
+                      <>
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                        <line x1="8" y1="21" x2="16" y2="21" />
+                        <line x1="12" y1="17" x2="12" y2="21" />
+                      </>
+                    )}
+                  </svg>
+                  <div>
+                    <p className="text-cream-100 font-body text-sm font-medium group-hover:text-gold-500 transition-colors">
+                      {deckLoading ? "Generating..." : "Generate Pitch Deck"}
+                    </p>
+                    <p className="text-cream-300/50 text-xs font-body mt-0.5">
+                      Download a .pptx to pitch investors
                     </p>
                   </div>
                 </button>
