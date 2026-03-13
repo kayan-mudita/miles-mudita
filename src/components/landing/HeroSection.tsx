@@ -1,7 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
+import SubmissionTerms from "@/components/submit/SubmissionTerms";
 
 function FloatingOrb({
   size,
@@ -75,6 +79,50 @@ function GridLines() {
 }
 
 export default function HeroSection() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [idea, setIdea] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleHeroSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!idea.trim() || idea.trim().length < 10) {
+      setError("Please describe your idea in at least a few sentences.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const isLoggedIn = !!session?.user?.id;
+      const endpoint = isLoggedIn ? "/api/submit" : "/api/submit/anonymous";
+      const body = isLoggedIn
+        ? { reportName: idea.trim().slice(0, 60), searchTopic: idea.trim(), depth: "QUICK" }
+        : { searchTopic: idea.trim() };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Something went wrong");
+      }
+
+      const data = await res.json();
+      router.push(
+        `/tracking?jobId=${encodeURIComponent(data.jobId)}&name=${encodeURIComponent(idea.trim().slice(0, 60))}`
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to submit");
+      setSubmitting(false);
+    }
+  }
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Ambient background layers */}
@@ -162,18 +210,54 @@ export default function HeroSection() {
           PDF report with a clear Go or No-Go — delivered in 40 minutes.
         </motion.p>
 
-        <motion.div
+        {/* Inline idea form */}
+        <motion.form
+          onSubmit={handleHeroSubmit}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+          className="max-w-xl mx-auto mb-6"
         >
-          <Button href="/submit" variant="filled" size="lg">
-            Validate Your Idea
+          <textarea
+            value={idea}
+            onChange={(e) => { setIdea(e.target.value); setError(""); }}
+            rows={3}
+            placeholder="Describe your startup idea..."
+            className="w-full bg-navy-800 border border-gold-500/15 rounded-lg px-4 py-3 text-cream-100 font-body placeholder:text-cream-300/30 focus:outline-none focus:border-gold-500/50 focus:shadow-[0_0_15px_rgba(201,168,76,0.1)] transition-all resize-none mb-3"
+          />
+          {error && (
+            <p className="text-red-400 text-sm font-body mb-3">{error}</p>
+          )}
+          <Button
+            type="submit"
+            variant="filled"
+            size="lg"
+            loading={submitting}
+            disabled={submitting}
+            className="w-full sm:w-auto"
+          >
+            Validate My Idea
           </Button>
-          <Button href="/#how-it-works" variant="outline" size="lg">
+          <p className="text-cream-300/50 text-xs font-body mt-3">
+            No account required. Just your idea.
+          </p>
+          <div className="mt-2">
+            <SubmissionTerms condensed />
+          </div>
+        </motion.form>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 1 }}
+          className="mb-16"
+        >
+          <a
+            href="/#how-it-works"
+            className="text-sm text-gold-500 hover:text-gold-400 transition-colors font-body"
+          >
             See How It Works
-          </Button>
+          </a>
         </motion.div>
 
         {/* Authority stats strip */}

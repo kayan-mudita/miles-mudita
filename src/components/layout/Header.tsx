@@ -118,8 +118,14 @@ export default function Header() {
               >
                 FAQ
               </a>
-              <Button href="/login" size="md" variant="outline">
+              <a
+                href="/login"
+                className="text-sm text-cream-300 hover:text-cream-100 transition-colors font-body"
+              >
                 Sign In
+              </a>
+              <Button href="/signup" size="md" variant="outline">
+                Sign Up
               </Button>
               <Button href="/submit" size="md" variant="filled">
                 Validate Your Idea
@@ -217,8 +223,15 @@ export default function Header() {
                   >
                     FAQ
                   </a>
-                  <Button href="/login" size="md" variant="outline">
+                  <a
+                    href="/login"
+                    className="text-sm text-cream-300 hover:text-cream-100 transition-colors font-body"
+                    onClick={() => setMobileOpen(false)}
+                  >
                     Sign In
+                  </a>
+                  <Button href="/signup" size="md" variant="outline">
+                    Sign Up
                   </Button>
                   <Button href="/submit" size="md" variant="filled">
                     Validate Your Idea

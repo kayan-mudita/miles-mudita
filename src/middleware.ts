@@ -11,7 +11,7 @@ export async function middleware(req: NextRequest) {
   const isLoggedIn = hasSession;
 
   // Protected routes
-  const protectedRoutes = ["/dashboard", "/report", "/submit", "/tracking", "/team", "/compare"];
+  const protectedRoutes = ["/dashboard", "/report", "/team", "/compare"];
   const isProtected = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );

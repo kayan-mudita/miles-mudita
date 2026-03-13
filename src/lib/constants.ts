@@ -55,7 +55,7 @@ export const FAQ_ITEMS = [
   {
     question: "How long does a report take?",
     answer:
-      "Miles typically delivers your full report in about 40 minutes. You'll receive two emails — first a one-page executive summary, then the complete scored PDF.",
+      "Miles typically delivers your full report in about 40 minutes. You can track progress in real time on your dashboard and view the complete scored report as soon as it's ready.",
   },
   {
     question: "What's included in the report?",
@@ -76,6 +76,11 @@ export const FAQ_ITEMS = [
     question: "Is my idea kept confidential?",
     answer:
       "Absolutely. Your submission is processed securely and never shared with third parties. We treat every idea with the discretion it deserves.",
+  },
+  {
+    question: "What happens to my submitted idea?",
+    answer:
+      "Your idea is used solely to generate your research report and is never shared with third parties. In the rare event that Mudita Studios decides to pursue a venture based on or inspired by your submitted idea, you may be entitled to an equity stake at Mudita Studios' discretion. We believe the people who bring great ideas deserve to share in the upside.",
   },
 ] as const;
 

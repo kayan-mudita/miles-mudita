@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
@@ -11,9 +11,13 @@ import Button from "@/components/ui/Button";
 function TrackingContent() {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
+  const isLoggedIn = !!session?.user?.id;
   const email = session?.user?.email || searchParams.get("email") || "your email";
   const reportName = searchParams.get("name") || "your idea";
   const jobId = searchParams.get("jobId") || "";
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
+
+  const signupUrl = `/signup?callbackUrl=${encodeURIComponent(`/tracking?jobId=${jobId}&name=${encodeURIComponent(reportName)}`)}`;
 
   return (
     <section className="relative min-h-screen py-24 overflow-hidden">
@@ -37,12 +41,47 @@ function TrackingContent() {
           </h1>
           <p className="text-cream-300 font-body max-w-md mx-auto">
             Researching <span className="text-cream-100">{reportName}</span>.
-            Your report will be delivered to{" "}
-            <span className="text-gold-500">{email}</span>.
+            {isLoggedIn
+              ? " You can view your report on your dashboard when it's ready."
+              : " Your report will be ready shortly."}
           </p>
         </motion.div>
 
         <ProgressTracker jobId={jobId} />
+
+        {/* Anonymous account nudge */}
+        {!isLoggedIn && !nudgeDismissed && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-10 bg-navy-800 border border-gold-500/20 rounded-lg p-6 relative"
+          >
+            <button
+              onClick={() => setNudgeDismissed(true)}
+              className="absolute top-3 right-3 text-cream-300/40 hover:text-cream-100 transition-colors"
+              aria-label="Dismiss"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+
+            <h3 className="font-display text-lg text-cream-100 mb-2">
+              Save Your Research
+            </h3>
+            <p className="text-cream-300 text-sm font-body mb-4 max-w-lg">
+              Create a free account to keep this report and all future reports
+              in one place. Track progress, compare ideas, and download PDFs.
+            </p>
+            <Button href={signupUrl} variant="filled" size="md">
+              Create Free Account
+            </Button>
+            <p className="text-cream-300/40 text-xs font-body mt-3 italic">
+              We&apos;ll link this report to your new account.
+            </p>
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}

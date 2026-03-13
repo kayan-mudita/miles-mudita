@@ -9,7 +9,8 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-    if (!session?.user?.id) {
+    const userId = session?.user?.id || req.cookies.get("miles_anon_id")?.value;
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -21,9 +22,10 @@ export async function GET(
     }
 
     // Verify ownership: user owns the report or is a member of the report's team
-    const isOwner = job.userId === session.user.id;
+    const isOwner = job.userId === userId;
     const isTeamMember =
       job.teamId &&
+      session?.user?.id &&
       (await prisma.teamMember.findUnique({
         where: { teamId_userId: { teamId: job.teamId, userId: session.user.id } },
       }));

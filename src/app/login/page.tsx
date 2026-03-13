@@ -110,10 +110,10 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-cream-300/50 text-sm font-body mt-6">
+        <p className="text-center text-cream-200 text-base font-body mt-6">
           Don&apos;t have an account?{" "}
-          <a href="/signup" className="text-gold-500 hover:underline">
-            Sign up
+          <a href="/signup" className="text-gold-500 font-semibold hover:underline">
+            Sign up free
           </a>
         </p>
       </motion.div>

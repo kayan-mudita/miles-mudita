@@ -2,8 +2,10 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
+import SubmissionTerms from "@/components/submit/SubmissionTerms";
 
 type Step = "mode" | "form" | "confirm";
 type Mode = "quick" | "deep";
@@ -29,6 +31,8 @@ const ACCEPTED_TYPES = ".pdf,.pptx,.ppt,.xlsx,.xls,.csv,.doc,.docx,.txt";
 
 export default function IdeaForm() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user?.id;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>("mode");
   const [mode, setMode] = useState<Mode>("quick");
@@ -91,6 +95,13 @@ export default function IdeaForm() {
     setStep("form");
   }
 
+  // Anonymous users skip mode selection and go straight to quick form
+  function handleAnonymousQuickStart() {
+    setMode("quick");
+    setForm((prev) => ({ ...prev, depth: "QUICK" }));
+    setStep("form");
+  }
+
   function handleReview(e: React.FormEvent) {
     e.preventDefault();
     setStep("confirm");
@@ -126,14 +137,15 @@ export default function IdeaForm() {
     try {
       const searchTopic = buildSearchTopic();
 
-      const res = await fetch("/api/submit", {
+      const endpoint = isLoggedIn ? "/api/submit" : "/api/submit/anonymous";
+      const body = isLoggedIn
+        ? { reportName: form.reportName, searchTopic, depth: form.depth }
+        : { searchTopic };
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reportName: form.reportName,
-          searchTopic,
-          depth: form.depth,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -145,7 +157,7 @@ export default function IdeaForm() {
       const jobId = data.jobId;
 
       router.push(
-        `/tracking?jobId=${encodeURIComponent(jobId)}&name=${encodeURIComponent(form.reportName)}`
+        `/tracking?jobId=${encodeURIComponent(jobId)}&name=${encodeURIComponent(form.reportName || searchTopic.slice(0, 60))}`
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit");
@@ -171,12 +183,22 @@ export default function IdeaForm() {
             transition={{ duration: 0.4 }}
             className="space-y-4"
           >
+            {!isLoggedIn && (
+              <div className="text-center mb-2">
+                <p className="text-cream-300/60 text-xs font-body">
+                  No account needed for Quick Look.{" "}
+                  <a href="/signup" className="text-gold-500 hover:underline">Sign up free</a>{" "}
+                  to unlock Deep Dive.
+                </p>
+              </div>
+            )}
+
             <p className="text-center text-cream-300 font-body mb-6">
               How would you like to submit your idea?
             </p>
 
             <button
-              onClick={() => selectMode("quick")}
+              onClick={() => isLoggedIn ? selectMode("quick") : handleAnonymousQuickStart()}
               className="w-full text-left p-6 rounded-lg border border-gold-500/15 bg-navy-800 hover:border-gold-500/40 transition-all group"
             >
               <div className="flex items-start gap-4">
@@ -197,8 +219,13 @@ export default function IdeaForm() {
             </button>
 
             <button
-              onClick={() => selectMode("deep")}
-              className="w-full text-left p-6 rounded-lg border border-gold-500/15 bg-navy-800 hover:border-gold-500/40 transition-all group"
+              onClick={() => isLoggedIn ? selectMode("deep") : undefined}
+              disabled={!isLoggedIn}
+              className={`w-full text-left p-6 rounded-lg border transition-all group ${
+                isLoggedIn
+                  ? "border-gold-500/15 bg-navy-800 hover:border-gold-500/40"
+                  : "border-gold-500/10 bg-navy-800/50 opacity-60 cursor-not-allowed"
+              }`}
             >
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-full bg-gold-500/10 border border-gold-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -211,6 +238,9 @@ export default function IdeaForm() {
                 <div>
                   <h3 className="font-display text-lg text-cream-100 group-hover:text-gold-500 transition-colors">
                     Deep Dive
+                    {!isLoggedIn && (
+                      <span className="text-cream-300/40 text-xs font-body ml-2">(Account required)</span>
+                    )}
                   </h3>
                   <p className="text-cream-300/60 text-sm font-body mt-1">
                     Have a more developed concept? Answer guided prompts and attach supporting materials for a higher-fidelity assessment.
@@ -431,38 +461,40 @@ export default function IdeaForm() {
               </div>
             )}
 
-            {/* Research Depth Selector */}
-            <div>
-              <label className="block text-cream-200 text-sm font-body mb-2">
-                Research Depth
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {DEPTH_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, depth: opt.value }))}
-                    className={`p-3 rounded-lg border text-center transition-all ${
-                      form.depth === opt.value
-                        ? "border-gold-500 bg-gold-500/10"
-                        : "border-gold-500/15 bg-navy-800 hover:border-gold-500/30"
-                    }`}
-                  >
-                    <p className={`font-display text-sm ${
-                      form.depth === opt.value ? "text-gold-500" : "text-cream-100"
-                    }`}>
-                      {opt.label}
-                    </p>
-                    <p className="text-cream-300/50 text-xs font-body mt-0.5">
-                      {opt.time}
-                    </p>
-                  </button>
-                ))}
+            {/* Research Depth Selector — hidden for anonymous users */}
+            {isLoggedIn && (
+              <div>
+                <label className="block text-cream-200 text-sm font-body mb-2">
+                  Research Depth
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {DEPTH_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, depth: opt.value }))}
+                      className={`p-3 rounded-lg border text-center transition-all ${
+                        form.depth === opt.value
+                          ? "border-gold-500 bg-gold-500/10"
+                          : "border-gold-500/15 bg-navy-800 hover:border-gold-500/30"
+                      }`}
+                    >
+                      <p className={`font-display text-sm ${
+                        form.depth === opt.value ? "text-gold-500" : "text-cream-100"
+                      }`}>
+                        {opt.label}
+                      </p>
+                      <p className="text-cream-300/50 text-xs font-body mt-0.5">
+                        {opt.time}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-cream-300/40 text-xs font-body mt-1.5">
+                  {selectedDepth.desc}
+                </p>
               </div>
-              <p className="text-cream-300/40 text-xs font-body mt-1.5">
-                {selectedDepth.desc}
-              </p>
-            </div>
+            )}
 
             <Button
               type="submit"
@@ -574,6 +606,8 @@ export default function IdeaForm() {
               Does everything look correct? Once confirmed, Miles will begin
               researching your idea.
             </p>
+
+            <SubmissionTerms />
 
             {error && (
               <p className="text-red-400 text-sm font-body text-center">

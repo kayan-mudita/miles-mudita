@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import GoldGlow from "@/components/ui/GoldGlow";
@@ -43,7 +43,12 @@ export default function SignupPage() {
         throw new Error("Account created but sign-in failed. Please log in.");
       }
 
-      router.push("/dashboard");
+      // Transfer any anonymous reports to the new account
+      await fetch("/api/auth/claim-anonymous", { method: "POST" }).catch(() => {});
+
+      // Redirect to callback URL if present, otherwise dashboard
+      const params = new URLSearchParams(window.location.search);
+      router.push(params.get("callbackUrl") || "/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setLoading(false);
@@ -64,12 +69,20 @@ export default function SignupPage() {
         className="relative z-10 w-full max-w-md px-6"
       >
         <div className="text-center mb-8">
-          <h1 className="font-display text-4xl text-cream-100 mb-2">
-            Create Account
+          <p className="text-gold-500 text-xs tracking-[0.3em] uppercase font-body mb-4">
+            Free Account
+          </p>
+          <h1 className="font-display text-5xl md:text-6xl text-cream-100 mb-3">
+            Create Your Account
           </h1>
-          <p className="text-cream-300 text-sm font-body">
+          <p className="text-cream-300 text-base md:text-lg font-body mb-6">
             Start validating your startup ideas
           </p>
+          <div className="flex flex-col items-center gap-2 text-sm text-cream-300/70 font-body">
+            <span>Save reports in one place</span>
+            <span>Track progress in real time</span>
+            <span>Compare ideas side by side</span>
+          </div>
         </div>
 
         <div className="bg-navy-800 border border-gold-500/15 rounded-lg p-8">
@@ -139,7 +152,7 @@ export default function SignupPage() {
               loading={loading}
               className="w-full"
             >
-              Create Account
+              Create Free Account
             </Button>
           </form>
         </div>
