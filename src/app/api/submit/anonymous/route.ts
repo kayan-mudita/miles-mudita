@@ -107,19 +107,24 @@ export async function POST(req: NextRequest) {
 
     if (isNetlify) {
       const bgUrl = `${appUrl}/.netlify/functions/run-pipeline-background`;
-      fetch(bgUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-pipeline-secret": pipelineSecret,
-        },
-        body: JSON.stringify({
-          jobId: report.id,
-          searchTopic: searchTopic.trim(),
-          reportName,
-          maxRounds,
-        }),
-      }).catch(async (err) => {
+      try {
+        const bgRes = await fetch(bgUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-pipeline-secret": pipelineSecret,
+          },
+          body: JSON.stringify({
+            jobId: report.id,
+            searchTopic: searchTopic.trim(),
+            reportName,
+            maxRounds,
+          }),
+        });
+        pipelineLog.info(`Background function triggered for anon job ${report.id}`, {
+          data: { jobId: report.id, bgStatus: bgRes.status },
+        });
+      } catch (err) {
         pipelineLog.error(`Failed to trigger background function for anon job ${report.id}`, {
           error: (err as Error).message || String(err),
           data: { jobId: report.id },
@@ -128,7 +133,7 @@ export async function POST(req: NextRequest) {
           where: { id: report.id },
           data: { status: "FAILED", error: "Failed to start report pipeline. Please retry." },
         }).catch(() => {});
-      });
+      }
     } else {
       const { runPipeline } = await import("@/lib/pipeline/orchestrator");
       runPipeline(report.id, searchTopic.trim(), reportName, maxRounds).catch((err) => {
