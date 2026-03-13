@@ -19,10 +19,13 @@
 # DATABASE_URL        — Supabase pooler URL (port 6543, ?pgbouncer=true)
 # ANTHROPIC_API_KEY   — Claude API key
 # MILES_ANTHROPIC_API_KEY — Same key (used by pipeline agents)
-# AUTH_SECRET         — NextAuth secret
+# AUTH_SECRET         — NextAuth secret (also used as PIPELINE_SECRET fallback)
 # NEXTAUTH_SECRET     — Same as AUTH_SECRET
-# NEXTAUTH_URL        — Your Netlify URL (e.g. https://miles.netlify.app)
-# NEXT_PUBLIC_APP_URL — Same as NEXTAUTH_URL
+# NEXT_PUBLIC_APP_URL — Your production URL (e.g. https://buildmudita.com)
+#                       Used for pipeline background-function calls and email links.
+#                       Do NOT set NEXTAUTH_URL — trustHost auto-detects it from the request,
+#                       which lets the same deploy work on both the Netlify subdomain and
+#                       any custom domain without CSRF mismatches.
 # PIPELINE_SECRET     — Same as AUTH_SECRET (or a separate secret for internal auth)
 # RESEND_API_KEY      — Optional, for email notifications
 # EMAIL_FROM          — e.g. Miles <reports@mudita.com>

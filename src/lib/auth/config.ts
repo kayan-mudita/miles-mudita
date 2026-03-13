@@ -3,6 +3,13 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 
+// Remove hardcoded URL overrides so NextAuth derives the URL from the
+// incoming request Host header (enabled by trustHost: true below).
+// This lets the same deploy work on both the Netlify subdomain and any
+// custom domain (e.g. buildmudita.com) without CSRF / callback mismatches.
+delete process.env.NEXTAUTH_URL;
+delete process.env.AUTH_URL;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   providers: [
