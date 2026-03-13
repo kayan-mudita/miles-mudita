@@ -99,8 +99,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Pipeline authentication not configured" }, { status: 500 });
     }
 
-    // Use NEXT_PUBLIC_APP_URL as production indicator (NETLIFY env var isn't always set at runtime)
-    const isNetlify = !!process.env.NEXT_PUBLIC_APP_URL && process.env.NODE_ENV === "production";
+    // Use NEXT_PUBLIC_APP_URL as production indicator
+    const isNetlify = !!process.env.NEXT_PUBLIC_APP_URL;
 
     if (isNetlify) {
       if (!process.env.NEXT_PUBLIC_APP_URL) {

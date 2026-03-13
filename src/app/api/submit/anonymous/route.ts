@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Pipeline authentication not configured" }, { status: 500 });
     }
 
-    const isNetlify = !!process.env.NEXT_PUBLIC_APP_URL && process.env.NODE_ENV === "production";
+    const isNetlify = !!process.env.NEXT_PUBLIC_APP_URL;
 
     if (isNetlify) {
       const bgUrl = `${appUrl}/.netlify/functions/run-pipeline-background`;
