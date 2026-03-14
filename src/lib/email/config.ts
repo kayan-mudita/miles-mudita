@@ -12,3 +12,4 @@ export function getResend(): Resend | null {
 
 export const EMAIL_FROM = process.env.EMAIL_FROM || "Miles <reports@mudita.com>";
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+export const CONTACT_EMAIL = process.env.CONTACT_EMAIL || "kayan@muditastudios.com";

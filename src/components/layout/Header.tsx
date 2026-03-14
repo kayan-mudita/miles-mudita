@@ -119,6 +119,12 @@ export default function Header() {
                 FAQ
               </a>
               <a
+                href="/contact"
+                className="text-sm text-cream-300 hover:text-cream-100 transition-colors font-body"
+              >
+                Contact
+              </a>
+              <a
                 href="/login"
                 className="text-sm text-cream-300 hover:text-cream-100 transition-colors font-body"
               >
@@ -222,6 +228,13 @@ export default function Header() {
                     onClick={() => setMobileOpen(false)}
                   >
                     FAQ
+                  </a>
+                  <a
+                    href="/contact"
+                    className="text-sm text-cream-300 hover:text-cream-100 transition-colors font-body"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Contact
                   </a>
                   <a
                     href="/login"

@@ -1,4 +1,4 @@
-import { getResend, EMAIL_FROM, APP_URL } from "./config";
+import { getResend, EMAIL_FROM, APP_URL, CONTACT_EMAIL } from "./config";
 import { prisma } from "../db";
 
 export async function sendReportReadyEmail(reportId: string): Promise<void> {
@@ -84,5 +84,51 @@ export async function sendReportReadyEmail(reportId: string): Promise<void> {
     });
   } catch (err) {
     console.error("Failed to send report email:", err);
+  }
+}
+
+export async function sendContactNotification(
+  name: string,
+  email: string,
+  message: string
+): Promise<void> {
+  const resend = getResend();
+  if (!resend) {
+    console.warn("RESEND_API_KEY not set — skipping contact notification email");
+    return;
+  }
+
+  const html = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;background:#0f0f23;color:#e5e5e5;padding:32px">
+      <div style="text-align:center;margin-bottom:24px">
+        <h1 style="color:#c9a84c;font-size:24px;margin:0">Miles by Mudita</h1>
+        <p style="color:#6b7280;font-size:12px;margin:4px 0 0 0">New Contact Form Submission</p>
+      </div>
+
+      <div style="background:#1a1a2e;border:1px solid #c9a84c26;border-radius:8px;padding:24px;margin:16px 0">
+        <p style="color:#9ca3af;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px 0">From</p>
+        <p style="color:#e5e5e5;font-size:16px;margin:0 0 16px 0"><strong>${name}</strong> &lt;${email}&gt;</p>
+
+        <p style="color:#9ca3af;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 4px 0">Message</p>
+        <p style="color:#e5e5e5;font-size:14px;line-height:1.6;margin:0;white-space:pre-wrap">${message}</p>
+      </div>
+
+      <hr style="border:none;border-top:1px solid #c9a84c15;margin:24px 0" />
+      <p style="color:#6b7280;font-size:12px;text-align:center">
+        Reply directly to this email to respond to ${name}.
+      </p>
+    </div>
+  `;
+
+  try {
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: CONTACT_EMAIL,
+      replyTo: email,
+      subject: `New contact from ${name} — Miles by Mudita`,
+      html,
+    });
+  } catch (err) {
+    console.error("Failed to send contact notification email:", err);
   }
 }

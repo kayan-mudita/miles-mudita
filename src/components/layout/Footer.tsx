@@ -32,6 +32,12 @@ export default function Footer() {
             >
               FAQ
             </a>
+            <a
+              href="/contact"
+              className="text-sm text-cream-300 hover:text-cream-100 transition-colors font-body"
+            >
+              Contact
+            </a>
           </div>
 
           <p className="text-xs text-cream-300/50 font-body">

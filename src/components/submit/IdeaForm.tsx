@@ -43,6 +43,7 @@ export default function IdeaForm() {
   const [form, setForm] = useState({
     reportName: "",
     searchTopic: "",
+    email: "",
     depth: "STANDARD" as Depth,
     // Guided fields for deep dive
     problem: "",
@@ -140,7 +141,7 @@ export default function IdeaForm() {
       const endpoint = isLoggedIn ? "/api/submit" : "/api/submit/anonymous";
       const body = isLoggedIn
         ? { reportName: form.reportName, searchTopic, depth: form.depth }
-        : { searchTopic };
+        : { searchTopic, email: form.email || undefined };
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -319,6 +320,30 @@ export default function IdeaForm() {
                 className={`${inputClass} resize-none`}
               />
             </div>
+
+            {/* Email for anonymous users */}
+            {!isLoggedIn && (
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-cream-200 text-sm font-body mb-1.5"
+                >
+                  Email <span className="text-cream-300/40">(to receive your report)</span>
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  className={inputClass}
+                />
+                <p className="text-cream-300/40 text-xs font-body mt-1">
+                  Optional — we&apos;ll email your completed report to this address.
+                </p>
+              </div>
+            )}
 
             {/* Deep Dive guided prompts */}
             {mode === "deep" && (
@@ -546,6 +571,15 @@ export default function IdeaForm() {
                   {selectedDepth.label} ({selectedDepth.time})
                 </p>
               </div>
+
+              {!isLoggedIn && form.email && (
+                <div>
+                  <p className="text-cream-300 text-xs font-body uppercase tracking-wider mb-1">
+                    Email
+                  </p>
+                  <p className="text-cream-100 font-body">{form.email}</p>
+                </div>
+              )}
 
               <div>
                 <p className="text-cream-300 text-xs font-body uppercase tracking-wider mb-1">

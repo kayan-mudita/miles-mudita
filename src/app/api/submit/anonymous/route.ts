@@ -16,7 +16,13 @@ function generateAnonId(): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { searchTopic } = body;
+    const { searchTopic, email } = body;
+
+    // Validate email if provided
+    const validEmail =
+      email && typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+        ? email.trim()
+        : null;
 
     if (!searchTopic || typeof searchTopic !== "string" || searchTopic.trim().length < 10) {
       return NextResponse.json(
@@ -34,6 +40,13 @@ export async function POST(req: NextRequest) {
       const existingUser = await prisma.user.findUnique({ where: { id: anonId } });
       if (existingUser) {
         userId = existingUser.id;
+        // Update email if user provided a real one this time
+        if (validEmail && existingUser.email !== validEmail) {
+          await prisma.user.update({
+            where: { id: existingUser.id },
+            data: { email: validEmail },
+          });
+        }
       } else {
         // Cookie references deleted user — create fresh
         anonId = undefined;
@@ -42,10 +55,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!anonId) {
-      const anonEmail = `${generateAnonId()}@anonymous.miles`;
+      const userEmail = validEmail || `${generateAnonId()}@anonymous.miles`;
       const newUser = await prisma.user.create({
         data: {
-          email: anonEmail,
+          email: userEmail,
           isAnonymous: true,
         },
       });
