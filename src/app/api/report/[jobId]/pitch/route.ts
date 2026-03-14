@@ -44,7 +44,21 @@ export async function GET(
       return NextResponse.json({ error: "Report not ready" }, { status: 202 });
     }
 
-    // Parse context to build deck data
+    const filename = `${job.reportName.replace(/[^a-zA-Z0-9]/g, "-")}-Pitch-Deck.pptx`;
+
+    // ── Serve pre-generated deck if available ──
+    if (job.pitchDeckBase64) {
+      const buffer = Buffer.from(job.pitchDeckBase64, "base64");
+      return new Response(new Uint8Array(buffer), {
+        headers: {
+          "Content-Type":
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    }
+
+    // ── Fallback: generate on-demand (template deck only, no code-gen) ──
     const ctx = JSON.parse(job.contextJson);
     const dims = ctx.dimensions as Record<string, Record<string, unknown>>;
 
@@ -69,7 +83,6 @@ export async function GET(
         )
       : null;
 
-    // Extract research findings per dimension for Claude narrative
     const dimensionFindings = dims
       ? Object.fromEntries(
           Object.entries(dims).map(([k, v]) => [
@@ -90,7 +103,13 @@ export async function GET(
 
     const buffer = await generatePitchDeck(deckData);
 
-    const filename = `${job.reportName.replace(/[^a-zA-Z0-9]/g, "-")}-Pitch-Deck.pptx`;
+    // Cache for next time (fire-and-forget)
+    prisma.report
+      .update({
+        where: { id: jobId },
+        data: { pitchDeckBase64: buffer.toString("base64") },
+      })
+      .catch(() => {});
 
     return new Response(new Uint8Array(buffer), {
       headers: {

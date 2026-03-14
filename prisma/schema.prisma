@@ -139,6 +139,9 @@ model Report {
   productScore     Float?
   financialScore   Float?
 
+  // Pitch deck (pre-generated, base64-encoded .pptx)
+  pitchDeckBase64 String? @db.Text
+
   // Timestamps
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

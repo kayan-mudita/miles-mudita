@@ -53,6 +53,7 @@ export async function updateJob(
     costScore?: number;
     productScore?: number;
     financialScore?: number;
+    pitchDeckBase64?: string;
     completedAt?: Date;
   }
 ) {

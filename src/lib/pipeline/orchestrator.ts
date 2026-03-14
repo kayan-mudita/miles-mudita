@@ -141,7 +141,56 @@ export async function runPipeline(
       summaryTimer()
     );
 
-    // ─── Step 7: Build global source index and assemble ─
+    // ─── Step 7: Generate pitch deck (runs in background, non-blocking if fails) ─
+    let pitchDeckBase64: string | undefined;
+    try {
+      log.stageStart("pitch-deck", "Generating pitch deck...");
+      const deckTimer = startTimer();
+      await updateJob(jobId, { progress: 92, detail: "Generating pitch deck..." });
+
+      const { generatePitchDeck } = await import("../deck/generator");
+
+      // Build deck data from pipeline context
+      const deckScores = Object.fromEntries(
+        DIMENSION_KEYS.map((dim) => {
+          const d = ctx.dimensions[dim as DimensionKey];
+          return [dim, d.score ? {
+            score: d.score.score,
+            justification: d.score.justification,
+            strengths: d.score.strengths,
+            weaknesses: d.score.weaknesses,
+            key_risk: d.score.key_risk,
+          } : null];
+        })
+      );
+
+      const dimensionFindings = Object.fromEntries(
+        DIMENSION_KEYS.map((dim) => [dim, ctx.dimensions[dim as DimensionKey].allFindings])
+      );
+
+      const deckData = {
+        reportName: ctx.reportName,
+        searchTopic: ctx.searchTopic,
+        intro: ctx.intro ?? null,
+        scores: deckScores,
+        summary: ctx.scoringSummary ? {
+          overall_score: ctx.scoringSummary.overall_score,
+          recommendation: ctx.scoringSummary.recommendation as "GO" | "NO-GO" | "CONDITIONAL",
+          executive_summary_html: ctx.scoringSummary.executive_summary_html ?? "",
+          strengths: ctx.scoringSummary.strengths ?? [],
+          risks: ctx.scoringSummary.risks ?? [],
+        } : null,
+        dimensionFindings,
+      };
+
+      const buffer = await generatePitchDeck(deckData);
+      pitchDeckBase64 = buffer.toString("base64");
+      log.stageEnd("pitch-deck", deckTimer(), `Deck generated: ${buffer.length} bytes`);
+    } catch (deckErr) {
+      log.warn("Pitch deck generation failed (non-fatal)", { error: String(deckErr) });
+    }
+
+    // ─── Step 8: Build global source index and assemble ─
     log.stageStart("assembly", "Assembling report...");
     const assemblyTimer = startTimer();
     await updateJob(jobId, { stage: "generating", progress: 92, detail: "Assembling report..." });
@@ -191,6 +240,7 @@ export async function runPipeline(
       costScore: costScore ?? undefined,
       productScore: productScore ?? undefined,
       financialScore: financialScore ?? undefined,
+      pitchDeckBase64: pitchDeckBase64 ?? undefined,
       completedAt: new Date(),
     });
     log.dbWrite("Final report persisted", dbTimer());
