@@ -102,6 +102,60 @@ function extractJSON(text: string): string {
 }
 
 /**
+ * Fix invalid escape sequences inside JSON string values.
+ * LLMs sometimes produce \' or \x or other bad escapes inside strings
+ * (especially when embedding HTML). This repairs them before JSON.parse.
+ */
+function repairJSON(text: string): string {
+  // Walk through the string, only fixing escapes inside JSON string values
+  let result = "";
+  let inString = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+
+    if (!inString) {
+      if (ch === '"') inString = true;
+      result += ch;
+      continue;
+    }
+
+    // Inside a JSON string
+    if (ch === '"') {
+      inString = false;
+      result += ch;
+      continue;
+    }
+
+    if (ch === "\\") {
+      const next = text[i + 1];
+      // Valid JSON escapes: " \ / b f n r t uXXXX
+      if (next && `"\\/bfnrtu`.includes(next)) {
+        result += ch; // keep valid escape as-is
+      } else {
+        // Bad escape like \' \x \a etc — drop the backslash
+        result += "";
+        continue;
+      }
+    } else {
+      result += ch;
+    }
+  }
+  return result;
+}
+
+/**
+ * Try JSON.parse, falling back to repairJSON + retry on failure.
+ */
+function safeJSONParse<T>(text: string): T {
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    const repaired = repairJSON(text);
+    return JSON.parse(repaired) as T;
+  }
+}
+
+/**
  * Run an agent using the Anthropic Messages API directly.
  * This replaces the previous claude-agent-sdk implementation that spawned
  * a Claude Code subprocess (which doesn't work on serverless platforms).
@@ -235,7 +289,7 @@ export async function runAgent<T>(options: RunAgentOptions): Promise<T> {
       if (outputSchema) {
         const jsonStr = extractJSON(allText);
         pipelineLog.debug(`[${label}] Parsed JSON from combined text blocks`, { durationMs: elapsed });
-        return JSON.parse(jsonStr) as T;
+        return safeJSONParse<T>(jsonStr);
       }
       return allText as unknown as T;
     }
@@ -249,7 +303,7 @@ export async function runAgent<T>(options: RunAgentOptions): Promise<T> {
   if (outputSchema) {
     const jsonStr = extractJSON(lastText);
     try {
-      const parsed = JSON.parse(jsonStr) as T;
+      const parsed = safeJSONParse<T>(jsonStr);
       pipelineLog.debug(`[${label}] JSON parsed successfully`, {
         durationMs: elapsed,
         data: { outputSize: jsonStr.length },
@@ -263,7 +317,7 @@ export async function runAgent<T>(options: RunAgentOptions): Promise<T> {
       for (let i = allTextBlocks.length - 1; i >= 0; i--) {
         try {
           const candidate = extractJSON(allTextBlocks[i]);
-          const parsed = JSON.parse(candidate) as T;
+          const parsed = safeJSONParse<T>(candidate);
           pipelineLog.info(`[${label}] Found valid JSON in block ${i + 1}/${allTextBlocks.length}`, {
             durationMs: elapsed,
           });
