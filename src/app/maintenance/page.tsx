@@ -5,16 +5,22 @@ import { useState } from "react";
 export default function MaintenancePage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Store in localStorage as a simple waitlist (no backend needed)
-    const existing = JSON.parse(localStorage.getItem("miles_waitlist") || "[]");
-    if (!existing.includes(email)) {
-      existing.push(email);
-      localStorage.setItem("miles_waitlist", JSON.stringify(existing));
+    setError("");
+    try {
+      const res = await fetch("/api/lab/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error("Failed to join waitlist");
+      setSubmitted(true);
+    } catch {
+      setError("Something went wrong. Please try again.");
     }
-    setSubmitted(true);
   };
 
   return (
@@ -38,22 +44,25 @@ export default function MaintenancePage() {
         </p>
 
         {!submitted ? (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="flex-1 px-4 py-3 rounded-lg bg-navy-800 border border-navy-600 text-cream-100 placeholder:text-cream-300/50 focus:outline-none focus:border-gold-500 transition-colors"
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 rounded-lg bg-gold-500 text-navy-950 font-semibold hover:bg-gold-400 transition-colors whitespace-nowrap"
-            >
-              Notify Me
-            </button>
-          </form>
+          <div className="max-w-md mx-auto space-y-3">
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                className="flex-1 px-4 py-3 rounded-lg bg-navy-800 border border-navy-600 text-cream-100 placeholder:text-cream-300/50 focus:outline-none focus:border-gold-500 transition-colors"
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 rounded-lg bg-gold-500 text-navy-950 font-semibold hover:bg-gold-400 transition-colors whitespace-nowrap"
+              >
+                Notify Me
+              </button>
+            </form>
+            {error && <p className="text-red-400 text-sm">{error}</p>}
+          </div>
         ) : (
           <div className="px-6 py-4 rounded-lg border border-gold-500/30 bg-gold-500/10 max-w-md mx-auto">
             <p className="text-gold-400 font-medium">
