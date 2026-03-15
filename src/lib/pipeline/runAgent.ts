@@ -141,8 +141,10 @@ export async function runAgent<T>(options: RunAgentOptions): Promise<T> {
     apiTools.push({ type: "web_search_20250305", name: "web_search", max_uses: 10 });
   }
 
-  // Explicitly set baseURL to bypass Netlify's AI proxy (which sets ANTHROPIC_BASE_URL)
-  const client = new Anthropic({ apiKey, baseURL: "https://api.anthropic.com" });
+  // Allow overriding base URL (e.g. OpenRouter: https://openrouter.ai/api/v1)
+  // Falls back to Anthropic direct to bypass Netlify's AI proxy (which sets ANTHROPIC_BASE_URL)
+  const baseURL = process.env.MILES_API_BASE_URL || "https://api.anthropic.com";
+  const client = new Anthropic({ apiKey, baseURL });
 
   // Add timeout via AbortController
   const abortController = new AbortController();
