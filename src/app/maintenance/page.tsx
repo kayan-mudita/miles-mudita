@@ -35,7 +35,7 @@ export default function MaintenancePage() {
         </h1>
 
         <p className="text-cream-300 text-lg md:text-xl leading-relaxed">
-          Our fans have exceeded Miles' demand and expectations and we are working
+          Demand for Miles has exceeded our expectations and we are working
           on getting a better version of Miles to you ASAP.
         </p>
 
