@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const MAINTENANCE_MODE = process.env.MILES_MAINTENANCE === "true";
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // ── Maintenance mode: redirect everything to /maintenance ──
+  if (MAINTENANCE_MODE && pathname !== "/maintenance") {
+    return NextResponse.redirect(new URL("/maintenance", req.url));
+  }
+  // If maintenance is off but someone hits /maintenance, send them home
+  if (!MAINTENANCE_MODE && pathname === "/maintenance") {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
 
   // Check for session cookie existence (lightweight Edge-compatible check).
   // Actual auth verification happens in API routes via auth().
@@ -31,5 +42,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|studios).*)"],
 };
