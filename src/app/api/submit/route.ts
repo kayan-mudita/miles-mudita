@@ -7,11 +7,28 @@ import { pipelineLog } from "@/lib/pipeline/logger";
 
 export const runtime = "nodejs";
 
+const DEPTH_ORDER = ["QUICK", "STANDARD", "DEEP"] as const;
+type Depth = typeof DEPTH_ORDER[number];
+
 const DEPTH_ROUNDS: Record<string, number> = {
   QUICK: 1,
   STANDARD: 3,
   DEEP: 5,
 };
+
+/** Cap requested depth to MILES_MAX_DEPTH env var (if set). */
+function capDepth(requested: string): Depth {
+  const maxDepth = process.env.MILES_MAX_DEPTH as string | undefined;
+  if (!maxDepth || !DEPTH_ORDER.includes(maxDepth as Depth)) return requested as Depth;
+
+  const reqIdx = DEPTH_ORDER.indexOf(requested as Depth);
+  const capIdx = DEPTH_ORDER.indexOf(maxDepth as Depth);
+  if (reqIdx > capIdx) {
+    pipelineLog.info(`Depth capped: ${requested} → ${maxDepth}`);
+    return maxDepth as Depth;
+  }
+  return requested as Depth;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,12 +55,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const effectiveDepth = capDepth(depth);
+
     pipelineLog.info("Submit request received", {
       data: {
         userEmail: session.user.email ?? "unknown",
         reportName,
         searchTopic: searchTopic.slice(0, 120),
-        depth,
+        depth: effectiveDepth,
+        ...(effectiveDepth !== depth && { originalDepth: depth }),
       },
     });
 
@@ -69,7 +89,7 @@ export async function POST(req: NextRequest) {
       session.user.id,
       searchTopic,
       reportName,
-      depth as "QUICK" | "STANDARD" | "DEEP",
+      effectiveDepth,
       teamId
     );
 
@@ -77,7 +97,7 @@ export async function POST(req: NextRequest) {
       data: { jobId: report.id },
     });
 
-    const maxRounds = DEPTH_ROUNDS[depth] ?? 3;
+    const maxRounds = DEPTH_ROUNDS[effectiveDepth] ?? 3;
 
     // Trigger the pipeline via Netlify Background Function (returns 202 immediately)
     // Falls back to direct execution in development

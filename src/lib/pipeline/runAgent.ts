@@ -13,6 +13,64 @@ export function getApiKey(): string {
   return key;
 }
 
+/* ── Token-rate throttle ──────────────────────────────────────────────
+ * Enforces a pipeline-wide tokens-per-minute cap (MILES_TPM_LIMIT env var,
+ * default 20 000).  Uses a sliding-window token bucket: before each API
+ * call we wait until enough budget is available, then after the call we
+ * record actual usage from the Anthropic response.
+ * ------------------------------------------------------------------- */
+
+const DEFAULT_TPM = 20_000;
+
+/** Timestamped record of tokens consumed by one API call. */
+interface TokenRecord { ts: number; tokens: number }
+
+/** Shared in-process ledger (fine for single-invocation serverless). */
+const tokenLedger: TokenRecord[] = [];
+
+function getTpmLimit(): number {
+  const env = process.env.MILES_TPM_LIMIT;
+  if (env) {
+    const n = parseInt(env, 10);
+    if (n > 0) return n;
+  }
+  return DEFAULT_TPM;
+}
+
+/** Tokens consumed in the last 60 s. */
+function tokensInWindow(): number {
+  const cutoff = Date.now() - 60_000;
+  // Prune old entries while we're here
+  while (tokenLedger.length > 0 && tokenLedger[0].ts < cutoff) {
+    tokenLedger.shift();
+  }
+  return tokenLedger.reduce((sum, r) => sum + r.tokens, 0);
+}
+
+/** Block until we have room for at least `estimatedTokens` in the window. */
+async function waitForBudget(estimatedTokens: number, label: string): Promise<void> {
+  const limit = getTpmLimit();
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const used = tokensInWindow();
+    if (used + estimatedTokens <= limit) return;
+
+    // How long until the oldest record falls out of the window?
+    const oldest = tokenLedger[0];
+    const waitMs = oldest ? (oldest.ts + 60_000) - Date.now() + 50 : 1_000;
+    const clampedWait = Math.max(100, Math.min(waitMs, 30_000));
+    pipelineLog.info(
+      `[${label}] Token throttle: ${used}/${limit} TPM used, waiting ${(clampedWait / 1000).toFixed(1)}s`
+    );
+    await new Promise((r) => setTimeout(r, clampedWait));
+  }
+}
+
+/** Record actual usage after a call completes. */
+function recordUsage(tokens: number): void {
+  tokenLedger.push({ ts: Date.now(), tokens });
+}
+
 interface RunAgentOptions {
   systemPrompt: string;
   userPrompt: string;
@@ -96,6 +154,11 @@ export async function runAgent<T>(options: RunAgentOptions): Promise<T> {
   let toolUseCount = 0;
 
   try {
+    // ── Throttle: wait for token budget ──────────────────
+    // Rough estimate: prompt chars / 4 ≈ tokens.  Actual usage is recorded after.
+    const estimatedInput = Math.ceil((finalSystemPrompt.length + userPrompt.length) / 4);
+    await waitForBudget(estimatedInput, label);
+
     const createParams: Anthropic.MessageCreateParams = {
       model: CLAUDE_MODEL,
       max_tokens: 16384,
@@ -110,6 +173,13 @@ export async function runAgent<T>(options: RunAgentOptions): Promise<T> {
     const response = await client.messages.create(createParams, {
       signal: abortController.signal,
     });
+
+    // ── Record actual token usage ────────────────────────
+    const inputTokens = response.usage?.input_tokens ?? 0;
+    const outputTokens = response.usage?.output_tokens ?? 0;
+    const totalTokens = inputTokens + outputTokens;
+    recordUsage(totalTokens);
+    pipelineLog.debug(`[${label}] Tokens: ${inputTokens} in + ${outputTokens} out = ${totalTokens} total`);
 
     // Extract text blocks from response
     for (const block of response.content) {
